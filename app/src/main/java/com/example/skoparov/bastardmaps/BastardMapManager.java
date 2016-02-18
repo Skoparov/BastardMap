@@ -2,18 +2,16 @@ package com.example.skoparov.bastardmaps;
 
 import android.location.Location;
 import android.widget.TextView;
-
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
-/**
- * Created by skoparov on 15.02.16.
- */
 public class BastardMapManager extends SupportMapFragment
              implements
              BastardMapEventsInterface,
@@ -27,6 +25,7 @@ public class BastardMapManager extends SupportMapFragment
     private Location mCurrLocation;
     private GoogleApiClient mApiClient;
     private TextView mTextView;
+    private CameraPosition mCamPos;
 
     public void setGoogleApiClient( GoogleApiClient client )
     {
@@ -65,6 +64,12 @@ public class BastardMapManager extends SupportMapFragment
                 BastardMapLogger.EntryType.LOG_ENTRY_INFO,
                 "Map ready" );
 
+        if( mCamPos == null) {
+            mCamPos = mMap.getCameraPosition();
+        }
+
+        setMapState( mCamPos );
+
         try
         {
             mMap.setMyLocationEnabled(true);
@@ -90,9 +95,9 @@ public class BastardMapManager extends SupportMapFragment
         LatLng userCurrPos = new LatLng(mCurrLocation.getLatitude(), mCurrLocation.getLongitude());
         BastardMapLogger.getInstance().addEntry(
                 BastardMapLogger.EntryType.LOG_ENTRY_INFO,
-                "Coord update: " + userCurrPos);
+                "Pos: " + userCurrPos);
 
-        mTextView.setText("Pos upd: " + userCurrPos);
+        mTextView.setText("Pos: " + userCurrPos);
 
         if( mMap != null  )
         {
@@ -124,5 +129,29 @@ public class BastardMapManager extends SupportMapFragment
     public void onConnectionReady()
     {
         //TODO  smth cool
+    }
+
+    public void setMapState( CameraPosition camPos )
+    {
+        if( mMap != null )
+        {
+            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
+        }
+        else
+        {
+            mCamPos = camPos;
+        }
+    }
+
+    public CameraPosition getMapState()
+    {
+        if( mMap != null )
+        {
+
+            mCamPos = mMap.getCameraPosition();
+            return mCamPos;
+        }
+
+        return null;
     }
 }

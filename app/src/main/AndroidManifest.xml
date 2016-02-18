@@ -20,6 +20,7 @@
         <activity
             android:name=".BastardMainActivity"
             android:label="@string/app_name"
+            android:launchMode="singleTop"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,13 +41,12 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".BastardMapsActivity"
-            android:label="@string/title_activity_bastard_maps">
+            android:name=".BastardLogActivity"
+            android:label="@string/title_activity_bastard_maps_log">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.skoparov.bastardmaps.BastardMainActivity" />
         </activity>
-        <activity android:name=".BastardLogActivity"></activity>
     </application>
 
 </manifest>

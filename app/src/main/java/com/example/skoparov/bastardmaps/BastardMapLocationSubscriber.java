@@ -1,10 +1,8 @@
 package com.example.skoparov.bastardmaps;
 
+import android.app.Activity;
 import android.content.IntentSender;
-import android.location.Location;
 import android.os.Bundle;
-import android.widget.TextView;
-
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationRequest;
@@ -12,15 +10,9 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
-import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.common.api.ResultCallback;
-import com.google.android.gms.maps.CameraUpdateFactory;
-import com.google.android.gms.maps.model.LatLng;
 
-/**
- * Created by skoparov on 16.02.16.
- */
 public class BastardMapLocationSubscriber implements
         GoogleApiClient.ConnectionCallbacks,
         ResultCallback<LocationSettingsResult>
@@ -29,13 +21,17 @@ public class BastardMapLocationSubscriber implements
     private GoogleApiClient mGoogleApiClient;
     private BastardMapEventsHandler mEventsHandler;
     private boolean mLocationRequestAdded;
+    private Activity mParentActivity;
+    protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     public BastardMapLocationSubscriber(BastardMapEventsHandler eventsHandler,
-                                        LocationRequest request)
+                                        LocationRequest request,
+                                        Activity parent)
     {
         mEventsHandler = eventsHandler;
         mLocationRequestAdded = false;
         mLocationRequest = request;
+        mParentActivity = parent;
     }
 
     public void setGoogleApiClient( GoogleApiClient googleApiClient )
@@ -46,9 +42,7 @@ public class BastardMapLocationSubscriber implements
     @Override
     public void onConnected(Bundle bundle)
     {
-        if ( mGoogleApiClient != null ){
-            addLocationRequertSettings();
-        }
+        addLocationRequertSettings();
     }
 
     @Override
@@ -58,9 +52,11 @@ public class BastardMapLocationSubscriber implements
         // TODO
     }
 
-    protected boolean addLocationRequertSettings()
+    public boolean addLocationRequertSettings()
     {
-        if ( mLocationRequest != null && !mLocationRequestAdded )
+        if ( mGoogleApiClient != null &&
+             mLocationRequest != null &&
+             !mLocationRequestAdded )
         {
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(mLocationRequest);
@@ -112,9 +108,21 @@ public class BastardMapLocationSubscriber implements
 
                 break;
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                type = BastardMapLogger.EntryType.LOG_ENTRY_WARNING;
                 logEntry = "Location settings additon: RESOLUTION_REQUIRED";
 
-                //TODO: ask for permission
+                try
+                {
+                    status.startResolutionForResult(
+                            mParentActivity,
+                            REQUEST_CHECK_SETTINGS);
+
+                } catch (IntentSender.SendIntentException e)
+                {
+                    BastardMapLogger.getInstance().addEntry(
+                            BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                            "startResolutionForResult has thrown an exception" );
+                }
 
                 break;
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:

@@ -1,7 +1,10 @@
 package com.example.skoparov.bastardmaps;
 
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.method.ScrollingMovementMethod;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -20,6 +23,9 @@ public class BastardLogActivity extends AppCompatActivity
         BastardMapLogger logger = BastardMapLogger.getInstance();
 
         mLogView = new TextView(this);
+        mLogView.setMovementMethod(new ScrollingMovementMethod());
+        mLogView.setMaxLines(65536);
+        mLogView.setVerticalScrollBarEnabled(true);
         mLogView.setText(logger.getSerializedLog());
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.content_log);
 
@@ -31,6 +37,12 @@ public class BastardLogActivity extends AppCompatActivity
     @Override
     public void onNewLogEntry(String entry)
     {
-        mLogView.append( entry );
+        mLogView.append(entry);
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        moveTaskToBack(true);
     }
 }
