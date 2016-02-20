@@ -3,9 +3,17 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/Log"
+            android:id="@+id/log_option"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Test" />
+            android:title="Log" />
+        <item
+            android:id="@+id/service_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Start update location" />
+        <item
+            android:id="@+id/path_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Start new path" />
     </group>
 
 </menu>

@@ -1,5 +1,6 @@
 package com.example.skoparov.bastardmaps;
 
+import android.graphics.Color;
 import android.location.Location;
 import android.widget.TextView;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -26,49 +27,29 @@ public class BastardMapManager extends SupportMapFragment
     private GoogleApiClient mApiClient;
     private TextView mTextView;
     private CameraPosition mCamPos;
-
-    public void setGoogleApiClient( GoogleApiClient client )
-    {
-        mApiClient = client;
-    }
-
-    public void setTestTextView( TextView view )
-    {
-        mTextView = view;
-    }
-
-    public Location getCurrentLocation()
-    {
-        try
-        {
-            if( mCurrLocation == null && mApiClient != null )
-            {
-                mCurrLocation = LocationServices.FusedLocationApi.getLastLocation(mApiClient);
-            }
-        }
-        catch( SecurityException e )
-        {
-            BastardMapLogger.getInstance().addEntry(
-                    BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
-                    "Failed to get user location" );
-        }
-
-        return mCurrLocation;
-    }
+    private BastardMapLogger mLogger;
+    private BastardMapPainter mPainter;
 
     @Override
     public void onMapReady(GoogleMap googleMap)
     {
         mMap = googleMap;
-        BastardMapLogger.getInstance().addEntry(
-                BastardMapLogger.EntryType.LOG_ENTRY_INFO,
-                "Map ready" );
+        addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+                "Map ready");
 
-        if( mCamPos == null) {
+        if( mPainter == null)
+        {
+            mPainter = BastardFactory.getPainter( mMap, 6, Color.BLUE );
+        }
+
+        if (mCamPos == null) {
             mCamPos = mMap.getCameraPosition();
         }
 
-        setMapState( mCamPos );
+
+        setMapState( new BastardMapState( mCamPos ) );
+        mMap.setOnMapClickListener(this);
+        mMap.setOnMapLongClickListener(this);
 
         try
         {
@@ -76,15 +57,21 @@ public class BastardMapManager extends SupportMapFragment
         }
         catch ( SecurityException e )
         {
-            BastardMapLogger.getInstance().addEntry(
-                    BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
-                    "Failed to set up user location layer" );
+            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                    "Failed to set up user location layer");
         }
     }
 
     @Override
-    public void onPositionChanged(Location newLocation)
+    public void onPositionChanged(long time, Location newLocation)
     {
+        if( mCurrLocation !=null )
+        {
+            LatLng userCurrPos = new LatLng(mCurrLocation.getLatitude(), mCurrLocation.getLongitude());
+            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
+            mTextView.setText("Pos: " + userCurrPos);
+        }
+
         if( mCurrLocation != null ){
             mCurrLocation = newLocation;
         }
@@ -92,15 +79,14 @@ public class BastardMapManager extends SupportMapFragment
             mCurrLocation = new Location( newLocation );
         }
 
-        LatLng userCurrPos = new LatLng(mCurrLocation.getLatitude(), mCurrLocation.getLongitude());
-        BastardMapLogger.getInstance().addEntry(
-                BastardMapLogger.EntryType.LOG_ENTRY_INFO,
-                "Pos: " + userCurrPos);
-
-        mTextView.setText("Pos: " + userCurrPos);
+        if(mPainter != null)
+        {
+            mPainter.newPos(newLocation);
+        }
 
         if( mMap != null  )
         {
+
             //mMap.addMarker(new MarkerOptions().position(me).title("You are here, you bastard!"));
             //mMap.moveCamera(CameraUpdateFactory.newLatLng(me));
         }
@@ -109,6 +95,15 @@ public class BastardMapManager extends SupportMapFragment
     @Override
     public void onMapClick(LatLng latLng)
     {
+//        Location targetLocation = new Location("");//provider name is unecessary
+//        targetLocation.setLatitude(latLng.latitude);//your coords of course
+//        targetLocation.setLongitude(latLng.longitude);
+//
+//        if(mPainter != null)
+//        {
+//            mPainter.newPos(targetLocation);
+//        }
+
         //TODO smth cool
     }
 
@@ -131,27 +126,87 @@ public class BastardMapManager extends SupportMapFragment
         //TODO  smth cool
     }
 
-    public void setMapState( CameraPosition camPos )
+    public void startNewPath()
     {
-        if( mMap != null )
+        if(mPainter != null)
         {
-            mMap.animateCamera(CameraUpdateFactory.newCameraPosition(camPos));
-        }
-        else
-        {
-            mCamPos = camPos;
+            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "MapManager : path started");
+            mPainter.startNewPath(getCurrentLocation());
         }
     }
 
-    public CameraPosition getMapState()
+    public void setGoogleApiClient( GoogleApiClient client )
+    {
+        mApiClient = client;
+    }
+
+    public BastardMapPainter getPainter()
+    {
+        return mPainter;
+    }
+
+    public Location getCurrentLocation()
+    {
+        try
+        {
+            if( mCurrLocation == null && mApiClient != null )
+            {
+                mCurrLocation = LocationServices.FusedLocationApi.getLastLocation(mApiClient);
+            }
+        }
+        catch( SecurityException e )
+        {
+            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                    "Failed to get user location" );
+        }
+
+        return mCurrLocation;
+    }
+
+    public void setTestTextView( TextView view )
+    {
+        mTextView = view;
+    }
+
+    public void setLogger( BastardMapLogger logger )
+    {
+        mLogger = logger;
+    }
+
+    public void setMapPainter( BastardMapPainter painter )
+    {
+        mPainter = painter;
+    }
+
+    public void setMapState( BastardMapState state )
+    {
+        if( mMap != null )
+        {
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(state.prevCameraPosition));
+        }
+        else
+        {
+            mCamPos = state.prevCameraPosition;
+        }
+    }
+
+    public BastardMapState getMapState()
     {
         if( mMap != null )
         {
 
             mCamPos = mMap.getCameraPosition();
-            return mCamPos;
+            return new BastardMapState( mCamPos );
         }
 
         return null;
+    }
+
+    private void addLogEntry( BastardMapLogger.EntryType type, String text )
+    {
+        if(mLogger != null )
+        {
+            mLogger.addEntry(type, text);
+        }
     }
 }

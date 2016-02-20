@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.TreeSet;
+import java.util.Vector;
 
 public class BastardMapLogger
 {
@@ -42,10 +43,9 @@ public class BastardMapLogger
     private LogStorage mLog;
     private String mTimeZone;
     private DateFormat mTimeFormatter;
-    private BastardMapLogEventsInterface mLogEventsInterface;
-    private static BastardMapLogger instance = new BastardMapLogger();
+    private Vector<BastardMapLogEventsInterface> mSubsciptions = new Vector<>();
 
-    private BastardMapLogger()
+    public BastardMapLogger()
     {
         mLog = new LogStorage();
 
@@ -54,14 +54,15 @@ public class BastardMapLogger
         mTimeFormatter.setTimeZone(TimeZone.getTimeZone(mTimeZone));
     }
 
-    public static BastardMapLogger getInstance()
+    public boolean addLogEventsInterface( BastardMapLogEventsInterface lofInterface)
     {
-        return instance;
-    }
+        if( lofInterface != null )
+        {
+            mSubsciptions.add( lofInterface );
+            return true;
+        }
 
-    public void setLogEventsInterface( BastardMapLogEventsInterface lofInterface)
-    {
-        mLogEventsInterface = lofInterface;
+        return false;
     }
 
     public void addEntry( EntryType type, String message )
@@ -70,15 +71,29 @@ public class BastardMapLogger
         LogEntry newEntry = new LogEntry( message, timeStamp, type );
         mLog.add( newEntry );
 
-        // send to log view
-        if( mLogEventsInterface != null ) {
-            mLogEventsInterface.onNewLogEntry( getFormatEntryString( newEntry ) );
-        }
+        notifyOnNewEntry( newEntry );
     }
 
     public String getSerializedLog()
     {
         return serialize();
+    }
+
+    private void notifyOnNewEntry( LogEntry newEntry )
+    {
+        Iterator< BastardMapLogEventsInterface > it = mSubsciptions.iterator();
+
+        while(it.hasNext())
+        {
+            BastardMapLogEventsInterface bIf = it.next();
+
+            if( bIf != null) {
+                bIf.onNewLogEntry(getFormatEntryString(newEntry));
+            }
+            else{
+                it.remove();
+            }
+        }
     }
 
     private String serialize( )

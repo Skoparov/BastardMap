@@ -1,10 +1,7 @@
 package com.example.skoparov.bastardmaps;
 
 import android.Manifest;
-import android.app.PendingIntent;
-import android.app.TaskStackBuilder;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
@@ -12,93 +9,77 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.CameraPosition;
-import com.google.android.gms.maps.model.LatLng;
-
-public class BastardMainActivity extends AppCompatActivity
+public class BastardMainActivity extends BastardBasicBoundActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
-    GoogleApiClient mApiClient;
-    BastardMapLocationSubscriber mLocationSubscriber;
-    BastardMapEventsHandler mEventsHandler;
-    BastardMapManager mMapManager;
-
-    protected static final int REQUEST_CHECK_SETTINGS = 0x1;
+    private BastardMapLogger mLogger;
+    private BastardMapManager mMapManager;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState)
+    protected void createServiceDependant()
     {
-        super.onCreate(savedInstanceState);
+        super.createServiceDependant();
 
-        // Create menus
-        setContentView(R.layout.activity_bastard_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
-        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
-        toggle.syncState();
-
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
+        createMenus();
+        restoreLogger();
 
         // Create map stuff
-        TextView mTapTextView = (TextView) findViewById(R.id.tap_text);
-
-        BastardMapLogger.getInstance().addEntry(
-                BastardMapLogger.EntryType.LOG_ENTRY_INFO,
-                "Location permissions granted");
-
-        mMapManager = new BastardMapManager();
-        getSupportFragmentManager().beginTransaction().add(
-                R.id.fragment_container,
-                mMapManager).commit();
-
-        mEventsHandler = new BastardMapEventsHandler( mMapManager );
-        mLocationSubscriber = new BastardMapLocationSubscriber(
-                mEventsHandler,
-                createLocationRequest(),
-                this );
-
-        mApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks( mEventsHandler )
-                .addConnectionCallbacks(mLocationSubscriber)
-                .addOnConnectionFailedListener( mEventsHandler )
-                .addApi(LocationServices.API)
-                .build();
-
-        mLocationSubscriber.setGoogleApiClient(mApiClient);
-        mMapManager.setGoogleApiClient(mApiClient);
-        mMapManager.setTestTextView(mTapTextView);
-        mMapManager.getMapAsync(mMapManager);
-
-        if( savedInstanceState != null )
-        {
-            restoreMapState( savedInstanceState );
-        }
-
         if( checkPermissions() )
         {
-            mApiClient.connect();
+            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+                    "Location permissions granted");
         }
         else
         {
-            BastardMapLogger.getInstance().addEntry(
-                    BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
                     "Location permissions denied");
+            return;
         }
+
+        // create map package for service if it's not running
+        if( !BastardLocationUpdateService.IS_RUNNING )
+        {
+            BastardTracker t =
+                    BastardFactory.getBastardTracker(this, 1000, mLogger);
+
+            mService.setTracker(t);
+            mService.setActivity(this);
+
+            t.getMapPackage().apiClient.connect();
+            switchServiceState(false);
+        }
+
+        updateServiceButtonTitle(true, false);
+
+        BastardTracker t = mService.getTracker();
+        if( t.getMapPackage().isValid() )
+        {
+            BastardTracker.MapPackage p = t.getMapPackage();
+            TextView debugView = (TextView) findViewById(R.id.tap_text); //TODO remove later
+
+            //create map
+            mMapManager = BastardFactory.getMapManager(p.apiClient, mLogger);
+            mMapManager.setTestTextView(debugView); // DEBUG, remove later
+            mMapManager.getMapAsync(mMapManager);
+
+            p.eventsHandler.addCallbackInterface(mMapManager);
+            restoreMapState();
+
+            // add map to view
+            getSupportFragmentManager().beginTransaction().add(
+                    R.id.fragment_container,
+                    mMapManager).commit();
+        }
+    }
+
+    public void onServiceStatusChanged( boolean isRunning )
+    {
+        updateServiceButtonTitle(false, isRunning);
     }
 
     @Override
@@ -116,10 +97,9 @@ public class BastardMainActivity extends AppCompatActivity
     @Override
     public void onDestroy()
     {
-        BastardMapLogger.getInstance().addEntry(
-                BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
-                "on destroy");
-        mApiClient.disconnect();
+        mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                "on destroy"); //TODO remove later
+
         super.onDestroy();
     }
 
@@ -166,10 +146,32 @@ public class BastardMainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
 
-        if (id == R.id.Log)
+        if (id == R.id.log_option)
         {
-            Intent intent = new Intent(this, BastardLogActivity.class);
-            startActivity(intent);
+            startLogActivity();
+        }
+        else if(id == R.id.service_option)
+        {
+            boolean currentState = BastardLocationUpdateService.IS_RUNNING;
+            switchServiceState(currentState);
+        }
+        else if(id == R.id.path_option)
+        {
+            if(mMapManager.getPainter() != null)
+            {
+                boolean isRunning = mService.getTracker().isRecording();
+                if(!isRunning)
+                {
+                    mMapManager.startNewPath();
+                    mService.getTracker().startTrack();
+                }
+                else
+                {
+                    mService.getTracker().stopTrack();
+                }
+
+                updatePathStatusButtonTitle(!isRunning);
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -177,9 +179,77 @@ public class BastardMainActivity extends AppCompatActivity
         return true;
     }
 
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        saveMapState(savedInstanceState);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    // Custom functions
+
+    void createMenus()
+    {
+        setContentView(R.layout.activity_bastard_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+
+        drawer.setDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+    }
+
+    void restoreLogger()
+    {
+        if(BastardLocationUpdateService.IS_RUNNING && mService != null)
+        {
+            BastardTracker.MapPackage p =
+                    mService.getTracker().getMapPackage();
+
+            if( p.isValid() ){
+                mLogger = p.logger;
+            }
+        }
+        if( mLogger == null )
+        {
+            mLogger = BastardFactory.getLogger();
+        }
+    }
+
+    private void startLogActivity()
+    {
+        Intent intent = new Intent(this, BastardLogActivity.class);
+        intent.putExtra(BastardConstants.MISC.LOG_KEY, mLogger.getSerializedLog());
+
+        startActivity(intent);
+    }
+
+    private void switchServiceState( boolean currentState )
+    {
+        Intent service = new Intent(BastardMainActivity.this, BastardLocationUpdateService.class);
+
+        if ( !currentState)
+        {
+            service.setAction(BastardConstants.ACTION.STARTFOREGROUND_ACTION);
+        }
+        else
+        {
+            service.setAction(BastardConstants.ACTION.STOPFOREGROUND_ACTION);
+        }
+
+        startService(service);
+    }
+
     private boolean checkPermissions()
     {
-        return   ActivityCompat.checkSelfPermission(
+        return ActivityCompat.checkSelfPermission(
                         this,
                         Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                 &&
@@ -190,56 +260,17 @@ public class BastardMainActivity extends AppCompatActivity
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data)
     {
-        if (requestCode == REQUEST_CHECK_SETTINGS)
+        if (requestCode == BastardConstants.REQUESTS.REQUEST_CHECK_SETTINGS)
         {
             if (resultCode == RESULT_OK )
             {
-                mLocationSubscriber.addLocationRequertSettings();
+                mService.getTracker().getMapPackage().subscriber.addLocationRequestSettings();
             }
             else
             {
-                BastardMapLogger.getInstance().addEntry(
-                        BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
                         "RESOLUTION_REQUIRED asking failed");
             }
-        }
-    }
-
-    public LocationRequest createLocationRequest()
-    {
-        LocationRequest request = new LocationRequest();
-        request.setInterval(5000);
-        request.setFastestInterval(1000);
-        request.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        return request;
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle savedInstanceState)
-    {
-        saveMapState(savedInstanceState);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    private void restoreMapState( Bundle savedInstanceState )
-    {
-        double latitude = savedInstanceState.getDouble("latitude");
-        double longitude = savedInstanceState.getDouble("longitude");
-        float bearing = savedInstanceState.getFloat("bearing");
-        float tilt = savedInstanceState.getFloat("tilt");
-        float zoom = savedInstanceState.getFloat("zoom");
-
-
-        CameraPosition camPos = new CameraPosition(
-                new LatLng(latitude, longitude),
-                zoom,
-                tilt,
-                bearing);
-
-        if( mMapManager != null)
-        {
-            mMapManager.setMapState( camPos );
         }
     }
 
@@ -247,23 +278,53 @@ public class BastardMainActivity extends AppCompatActivity
     {
         if( mMapManager != null )
         {
-            CameraPosition camPos = mMapManager.getMapState();
+            mService.getTracker().saveMapState(mMapManager.getMapState());
+        }
+    }
 
-            if( camPos != null )
+    private void restoreMapState( )
+    {
+        if( mMapManager != null)
+        {
+            BastardMapState state = mService.getTracker().getPrevMapState();
+
+            if( state != null )
             {
-                double latitude = camPos.target.latitude;
-                double longitude = camPos.target.longitude;
-                float bearing = camPos.bearing;
-                float tilt = camPos.tilt;
-                float zoom = camPos.zoom;
-
-                savedInstanceState.putDouble("longitude", longitude);
-                savedInstanceState.putDouble("latitude", latitude);
-                savedInstanceState.putFloat("bearing", bearing);
-                savedInstanceState.putFloat("tilt", tilt);
-                savedInstanceState.putFloat("zoom", zoom);
+                mMapManager.setMapState( state);
             }
         }
     }
 
+    private void updatePathStatusButtonTitle( boolean isRunning )
+    {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        String serviceButtonTitle;
+
+            serviceButtonTitle = isRunning?
+                    BastardConstants.GUI.BUTTON_PATH_IS_ONGOING :
+                    BastardConstants.GUI.BUTTON_NO_ONGOING_PATH;
+
+        navigationView.getMenu().findItem(R.id.path_option).setTitle(serviceButtonTitle);
+    }
+
+    private void updateServiceButtonTitle(boolean checkService, boolean isRunning )
+    {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        String serviceButtonTitle;
+
+        if(checkService)
+        {
+            serviceButtonTitle = BastardLocationUpdateService.IS_RUNNING?
+                    BastardConstants.GUI.BUTTON_SERVICE_IS_RUNNING :
+                    BastardConstants.GUI.BUTTON_SERVICE_IS_DORMANT;
+        }
+        else
+        {
+            serviceButtonTitle = isRunning?
+                    BastardConstants.GUI.BUTTON_SERVICE_IS_RUNNING :
+                    BastardConstants.GUI.BUTTON_SERVICE_IS_DORMANT;
+        }
+
+        navigationView.getMenu().findItem(R.id.service_option).setTitle(serviceButtonTitle);
+    }
 }

@@ -20,18 +20,21 @@ public class BastardMapLocationSubscriber implements
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private BastardMapEventsHandler mEventsHandler;
+    private BastardMapLogger mLogger;
     private boolean mLocationRequestAdded;
     private Activity mParentActivity;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     public BastardMapLocationSubscriber(BastardMapEventsHandler eventsHandler,
                                         LocationRequest request,
-                                        Activity parent)
+                                        Activity parent,
+                                        BastardMapLogger logger)
     {
         mEventsHandler = eventsHandler;
         mLocationRequestAdded = false;
         mLocationRequest = request;
         mParentActivity = parent;
+        mLogger = logger;
     }
 
     public void setGoogleApiClient( GoogleApiClient googleApiClient )
@@ -42,7 +45,7 @@ public class BastardMapLocationSubscriber implements
     @Override
     public void onConnected(Bundle bundle)
     {
-        addLocationRequertSettings();
+        addLocationRequestSettings();
     }
 
     @Override
@@ -52,7 +55,7 @@ public class BastardMapLocationSubscriber implements
         // TODO
     }
 
-    public boolean addLocationRequertSettings()
+    public boolean addLocationRequestSettings()
     {
         if ( mGoogleApiClient != null &&
              mLocationRequest != null &&
@@ -82,55 +85,71 @@ public class BastardMapLocationSubscriber implements
         switch (status.getStatusCode())
         {
             case LocationSettingsStatusCodes.SUCCESS:
-
+            {
                 logEntry = "Location settings additon: SUCCESS";
-                boolean noExept = true;
-
-                try
-                {
-                    LocationServices.FusedLocationApi.requestLocationUpdates(
-                            mGoogleApiClient, mLocationRequest, mEventsHandler);
-                }
-                catch( SecurityException e )
-                {
-                    noExept = false;
-
-                    BastardMapLogger.getInstance().addEntry(
-                            BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
-                            "Request location updates has thrown an exception" );
-                }
-
-                if( noExept )
-                {
-                    type = BastardMapLogger.EntryType.LOG_ENTRY_INFO;
+                if (subscribeEventHandler()) {
                     mLocationRequestAdded = true;
+
+                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+                            "Subscription to location updates: SUCCESS");
+                } else {
+                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                            "Request location updates func has thrown an exception");
+
                 }
 
                 break;
+            }
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+            {
                 type = BastardMapLogger.EntryType.LOG_ENTRY_WARNING;
                 logEntry = "Location settings additon: RESOLUTION_REQUIRED";
 
-                try
-                {
+                try {
                     status.startResolutionForResult(
                             mParentActivity,
                             REQUEST_CHECK_SETTINGS);
 
-                } catch (IntentSender.SendIntentException e)
-                {
-                    BastardMapLogger.getInstance().addEntry(
-                            BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
-                            "startResolutionForResult has thrown an exception" );
+                } catch (IntentSender.SendIntentException e) {
+
+                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                            "startResolutionForResult has thrown an exception");
                 }
 
                 break;
+            }
             case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+            {
                 logEntry = "Location settings additon: SETTINGS_CHANGE_UNAVAILABLE";
                 break;
+            }
         }
 
-        BastardMapLogger.getInstance().addEntry(type, logEntry );
+        addLogEntry(type, logEntry );
     }
 
+    public boolean subscribeEventHandler()
+    {
+        try
+        {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient,
+                    mLocationRequest,
+                    mEventsHandler);
+        }
+        catch( SecurityException e )
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    private void addLogEntry( BastardMapLogger.EntryType type, String text )
+    {
+        if(mLogger != null )
+        {
+            mLogger.addEntry(type, text);
+        }
+    }
 }
