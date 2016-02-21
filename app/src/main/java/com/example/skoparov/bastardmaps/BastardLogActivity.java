@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 public class BastardLogActivity
         extends BastardBasicBoundActivity
-        implements BastardMapLogEventsInterface
+        implements BastardLogEventsInterface
 {
     class ScrollTextView extends TextView
     {

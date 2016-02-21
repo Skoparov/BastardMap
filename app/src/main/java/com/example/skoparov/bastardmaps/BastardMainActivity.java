@@ -17,7 +17,7 @@ import android.widget.TextView;
 public class BastardMainActivity extends BastardBasicBoundActivity
         implements NavigationView.OnNavigationItemSelectedListener
 {
-    private BastardMapLogger mLogger;
+    private BastardLogger mLogger;
     private BastardMapManager mMapManager;
 
     @Override
@@ -31,12 +31,12 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         // Create map stuff
         if( checkPermissions() )
         {
-            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+            mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                     "Location permissions granted");
         }
         else
         {
-            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+            mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                     "Location permissions denied");
             return;
         }
@@ -97,7 +97,7 @@ public class BastardMainActivity extends BastardBasicBoundActivity
     @Override
     public void onDestroy()
     {
-        mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+        mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                 "on destroy"); //TODO remove later
 
         super.onDestroy();
@@ -268,7 +268,7 @@ public class BastardMainActivity extends BastardBasicBoundActivity
             }
             else
             {
-                mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                         "RESOLUTION_REQUIRED asking failed");
             }
         }

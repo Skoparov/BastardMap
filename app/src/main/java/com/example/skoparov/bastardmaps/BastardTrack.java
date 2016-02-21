@@ -8,28 +8,55 @@ import java.util.Vector;
 
 public class BastardTrack
 {
-    Vector<BastardPosition> mTrackPoints;
-    private float mTotalDist = 0;
+    private Vector<BastardPosition> mTrackPoints;
 
-    public BastardTrack( Vector<BastardPosition> track)
+    //public methods
+
+    public BastardTrack()
+    {
+        mTrackPoints = new Vector<>();
+    }
+
+    public BastardTrack( Vector<BastardPosition> track )
     {
         mTrackPoints = track;
     }
 
-    public Vector<BastardPosition> getTrackPoints()
+    public void addPosition( BastardPosition p )
     {
-        return mTrackPoints;
+        mTrackPoints.add(p);
+    }
+
+    public void clear()
+    {
+        mTrackPoints.clear();
     }
 
     public float getTrackLength()
     {
-        return mTotalDist;
+        Iterator<BastardPosition> it = mTrackPoints.iterator();
+        float totalDist = 0;
+
+        while(it.hasNext())
+        {
+            BastardPosition start = it.next();
+
+            if(it.hasNext())
+            {
+                BastardPosition end = it.next();
+                totalDist += distanceBetween(start, end);
+            }
+            else{
+                break;
+            }
+        }
+
+        return totalDist;
     }
 
     public float getTrackDuration()
     {
         long duration = 0;
-
 
         if(mTrackPoints.size() >= 2)
         {
@@ -46,24 +73,12 @@ public class BastardTrack
         return getTrackLength() / getTrackDuration();
     }
 
-    private void calculateTotalDist()
+    public Vector<BastardPosition> getTrackPoints()
     {
-        Iterator<BastardPosition> it = mTrackPoints.iterator();
-
-        while(it.hasNext())
-        {
-            BastardPosition start = it.next();
-
-            if(it.hasNext())
-            {
-                BastardPosition end = it.next();
-                mTotalDist += distanceBetween(start, end);
-            }
-            else{
-                break;
-            }
-        }
+        return mTrackPoints;
     }
+
+    // private methods
 
     private float distanceBetween(BastardPosition start, BastardPosition end)
     {

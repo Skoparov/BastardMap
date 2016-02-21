@@ -1,13 +1,11 @@
 package com.example.skoparov.bastardmaps;
 
 import android.app.Activity;
-import android.graphics.Color;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.maps.model.Polyline;
 
 public class BastardFactory
 {
@@ -21,12 +19,12 @@ public class BastardFactory
         return request;
     }
 
-    public static BastardMapLogger getLogger()
+    public static BastardLogger getLogger()
     {
-        return new BastardMapLogger();
+        return new BastardLogger();
     }
 
-    public static BastardMapManager getMapManager( GoogleApiClient client, BastardMapLogger logger )
+    public static BastardMapManager getMapManager( GoogleApiClient client, BastardLogger logger )
     {
         BastardMapManager manager = new BastardMapManager();
         manager.setGoogleApiClient(client);
@@ -35,23 +33,23 @@ public class BastardFactory
         return manager;
     }
 
-    public static BastardMapPainter getPainter( GoogleMap map,
+    public static BastardTrackPainter getPainter( GoogleMap map,
                                                 int pathWidth,
                                                 int pathColor)
     {
-        return new BastardMapPainter( map,
-                new BastardMapPainter.PainterSettings(pathWidth, pathColor));
+        return new BastardTrackPainter( map,
+               new BastardTrackPainter.PainterSettings(pathWidth, pathColor));
     }
 
     public static BastardTracker getBastardTracker(Activity parentActivity,
                                                    Integer interval,
-                                                   BastardMapLogger logger)
+                                                   BastardLogger logger)
     {
         BastardMapEventsHandler eventsHandler = new BastardMapEventsHandler();
-        BastardLocationStorage storage = new BastardLocationStorage();
+        BastardLocationCollector storage = new BastardLocationCollector();
 
-        BastardMapLocationSubscriber locationSubscriber
-                = new BastardMapLocationSubscriber(
+        BastardLocationSubscriber locationSubscriber
+                = new BastardLocationSubscriber(
                 eventsHandler,
                 BastardFactory.getLocationRequest(interval),
                 parentActivity,

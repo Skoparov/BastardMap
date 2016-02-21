@@ -1,6 +1,6 @@
 package com.example.skoparov.bastardmaps;
 
-public interface BastardMapLogEventsInterface
+public interface BastardLogEventsInterface
 {
     public void onNewLogEntry( String entry );
 }

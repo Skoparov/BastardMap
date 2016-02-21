@@ -21,20 +21,7 @@ public class BastardMapEventsHandler implements
     @Override
     public void onConnected(Bundle bundle)
     {
-        if( !mBlock )
-        {
-            Iterator< BastardMapEventsInterface > it = mInterfaces.iterator();
 
-            while(it.hasNext())
-            {
-                if( it.next() != null) {
-                    it.next().onConnectionReady();
-                }
-                else{
-                    it.remove();
-                }
-            }
-        }
     }
 
     @Override

@@ -13,22 +13,22 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.common.api.ResultCallback;
 
-public class BastardMapLocationSubscriber implements
+public class BastardLocationSubscriber implements
         GoogleApiClient.ConnectionCallbacks,
         ResultCallback<LocationSettingsResult>
 {
     private LocationRequest mLocationRequest;
     private GoogleApiClient mGoogleApiClient;
     private BastardMapEventsHandler mEventsHandler;
-    private BastardMapLogger mLogger;
+    private BastardLogger mLogger;
     private boolean mLocationRequestAdded;
     private Activity mParentActivity;
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
-    public BastardMapLocationSubscriber(BastardMapEventsHandler eventsHandler,
-                                        LocationRequest request,
-                                        Activity parent,
-                                        BastardMapLogger logger)
+    public BastardLocationSubscriber(BastardMapEventsHandler eventsHandler,
+                                     LocationRequest request,
+                                     Activity parent,
+                                     BastardLogger logger)
     {
         mEventsHandler = eventsHandler;
         mLocationRequestAdded = false;
@@ -79,7 +79,7 @@ public class BastardMapLocationSubscriber implements
     public void onResult(LocationSettingsResult result )
     {
         Status status = result.getStatus();
-        BastardMapLogger.EntryType type = BastardMapLogger.EntryType.LOG_ENTRY_ERROR;
+        BastardLogger.EntryType type = BastardLogger.EntryType.LOG_ENTRY_ERROR;
         String logEntry = new String();
 
         switch (status.getStatusCode())
@@ -90,10 +90,10 @@ public class BastardMapLocationSubscriber implements
                 if (subscribeEventHandler()) {
                     mLocationRequestAdded = true;
 
-                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+                    addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                             "Subscription to location updates: SUCCESS");
                 } else {
-                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                    addLogEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                             "Request location updates func has thrown an exception");
 
                 }
@@ -102,7 +102,7 @@ public class BastardMapLocationSubscriber implements
             }
             case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
             {
-                type = BastardMapLogger.EntryType.LOG_ENTRY_WARNING;
+                type = BastardLogger.EntryType.LOG_ENTRY_WARNING;
                 logEntry = "Location settings additon: RESOLUTION_REQUIRED";
 
                 try {
@@ -112,7 +112,7 @@ public class BastardMapLocationSubscriber implements
 
                 } catch (IntentSender.SendIntentException e) {
 
-                    addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+                    addLogEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                             "startResolutionForResult has thrown an exception");
                 }
 
@@ -145,7 +145,7 @@ public class BastardMapLocationSubscriber implements
         return true;
     }
 
-    private void addLogEntry( BastardMapLogger.EntryType type, String text )
+    private void addLogEntry( BastardLogger.EntryType type, String text )
     {
         if(mLogger != null )
         {

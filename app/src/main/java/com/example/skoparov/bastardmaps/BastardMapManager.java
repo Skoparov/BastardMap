@@ -27,14 +27,14 @@ public class BastardMapManager extends SupportMapFragment
     private GoogleApiClient mApiClient;
     private TextView mTextView;
     private CameraPosition mCamPos;
-    private BastardMapLogger mLogger;
-    private BastardMapPainter mPainter;
+    private BastardLogger mLogger;
+    private BastardTrackPainter mPainter;
 
     @Override
     public void onMapReady(GoogleMap googleMap)
     {
         mMap = googleMap;
-        addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO,
+        addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                 "Map ready");
 
         if( mPainter == null)
@@ -57,7 +57,7 @@ public class BastardMapManager extends SupportMapFragment
         }
         catch ( SecurityException e )
         {
-            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+            addLogEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                     "Failed to set up user location layer");
         }
     }
@@ -65,31 +65,24 @@ public class BastardMapManager extends SupportMapFragment
     @Override
     public void onPositionChanged(long time, Location newLocation)
     {
-        if( mCurrLocation !=null )
-        {
-            LatLng userCurrPos = new LatLng(mCurrLocation.getLatitude(), mCurrLocation.getLongitude());
-            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
-            mTextView.setText("Pos: " + userCurrPos);
-        }
-
-        if( mCurrLocation != null ){
-            mCurrLocation = newLocation;
-        }
-        else{
-            mCurrLocation = new Location( newLocation );
-        }
+        mCurrLocation = mCurrLocation != null?
+                newLocation : new Location( newLocation );
 
         if(mPainter != null)
         {
-            mPainter.newPos(newLocation);
+            mPainter.addPoint(newLocation);
         }
 
-        if( mMap != null  )
-        {
+        //TODO: remove the following debug info
+        LatLng userCurrPos = new LatLng(mCurrLocation.getLatitude(), mCurrLocation.getLongitude());
+        addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
+        mTextView.setText("Pos: " + userCurrPos);
 
-            //mMap.addMarker(new MarkerOptions().position(me).title("You are here, you bastard!"));
-            //mMap.moveCamera(CameraUpdateFactory.newLatLng(me));
-        }
+//        if( mMap != null  )
+//        {
+//            mMap.addMarker(new MarkerOptions().position(me).title("You are here, you bastard!"));
+//            mMap.moveCamera(CameraUpdateFactory.newLatLng(me));
+//        }
     }
 
     @Override
@@ -101,7 +94,7 @@ public class BastardMapManager extends SupportMapFragment
 //
 //        if(mPainter != null)
 //        {
-//            mPainter.newPos(targetLocation);
+//            mPainter.addPoint(targetLocation);
 //        }
 
         //TODO smth cool
@@ -120,17 +113,11 @@ public class BastardMapManager extends SupportMapFragment
         return false;
     }
 
-    @Override
-    public void onConnectionReady()
-    {
-        //TODO  smth cool
-    }
-
     public void startNewPath()
     {
         if(mPainter != null)
         {
-            mLogger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "MapManager : path started");
+            mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "MapManager : path started");
             mPainter.startNewPath(getCurrentLocation());
         }
     }
@@ -140,7 +127,7 @@ public class BastardMapManager extends SupportMapFragment
         mApiClient = client;
     }
 
-    public BastardMapPainter getPainter()
+    public BastardTrackPainter getPainter()
     {
         return mPainter;
     }
@@ -156,7 +143,7 @@ public class BastardMapManager extends SupportMapFragment
         }
         catch( SecurityException e )
         {
-            addLogEntry(BastardMapLogger.EntryType.LOG_ENTRY_ERROR,
+            addLogEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                     "Failed to get user location" );
         }
 
@@ -168,12 +155,12 @@ public class BastardMapManager extends SupportMapFragment
         mTextView = view;
     }
 
-    public void setLogger( BastardMapLogger logger )
+    public void setLogger( BastardLogger logger )
     {
         mLogger = logger;
     }
 
-    public void setMapPainter( BastardMapPainter painter )
+    public void setMapPainter( BastardTrackPainter painter )
     {
         mPainter = painter;
     }
@@ -182,11 +169,11 @@ public class BastardMapManager extends SupportMapFragment
     {
         if( mMap != null )
         {
-            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(state.prevCameraPosition));
+            mMap.moveCamera(CameraUpdateFactory.newCameraPosition(state.cameraPosition));
         }
         else
         {
-            mCamPos = state.prevCameraPosition;
+            mCamPos = state.cameraPosition;
         }
     }
 
@@ -202,7 +189,7 @@ public class BastardMapManager extends SupportMapFragment
         return null;
     }
 
-    private void addLogEntry( BastardMapLogger.EntryType type, String text )
+    private void addLogEntry( BastardLogger.EntryType type, String text )
     {
         if(mLogger != null )
         {

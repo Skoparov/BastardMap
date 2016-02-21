@@ -1,22 +1,9 @@
 package com.example.skoparov.bastardmaps;
 
 import android.app.Activity;
-import android.content.Context;
-import android.location.Location;
-import android.os.Environment;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.io.BufferedWriter;
-import java.io.DataInput;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.OutputStreamWriter;
-import java.util.Iterator;
 import java.util.Vector;
 
 public class BastardTracker extends Activity
@@ -25,15 +12,15 @@ public class BastardTracker extends Activity
     {
         public GoogleApiClient apiClient;
         public BastardMapEventsHandler eventsHandler;
-        public BastardMapLocationSubscriber subscriber;
-        public BastardMapLogger logger;
-        public BastardLocationStorage storage;
+        public BastardLocationSubscriber subscriber;
+        public BastardLogger logger;
+        public BastardLocationCollector storage;
 
         public MapPackage(GoogleApiClient apiClient,
                           BastardMapEventsHandler eventsHandler,
-                          BastardMapLocationSubscriber subscriber,
-                          BastardLocationStorage storage,
-                          BastardMapLogger logger)
+                          BastardLocationSubscriber subscriber,
+                          BastardLocationCollector storage,
+                          BastardLogger logger)
         {
             this.apiClient = apiClient;
             this.eventsHandler = eventsHandler;
@@ -69,22 +56,18 @@ public class BastardTracker extends Activity
             stopTrack();
         }
 
-        mP.storage.clearPositions();
-        mP.logger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path started");
+        mP.storage.clear();
+        mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path started");
         setRecording(true);
     }
 
     public void stopTrack()
     {
         setRecording(false);
-        mP.logger.addEntry(BastardMapLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path stopped");
+        mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path stopped");
+        mTracks.add(mP.storage.getTrack());
 
-        BastardTrack newTrack = new BastardTrack(mP.storage.getPositions());
-
-
-        mTracks.add(newTrack);
-
-        //saveTrack();
+        //TODO: saveTrack();
     }
 
 //    public void saveTrack()

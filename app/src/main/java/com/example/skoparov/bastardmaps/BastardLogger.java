@@ -9,7 +9,7 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.Vector;
 
-public class BastardMapLogger
+public class BastardLogger
 {
     public enum EntryType
     {
@@ -43,9 +43,9 @@ public class BastardMapLogger
     private LogStorage mLog;
     private String mTimeZone;
     private DateFormat mTimeFormatter;
-    private Vector<BastardMapLogEventsInterface> mSubsciptions = new Vector<>();
+    private Vector<BastardLogEventsInterface> mSubsciptions = new Vector<>();
 
-    public BastardMapLogger()
+    public BastardLogger()
     {
         mLog = new LogStorage();
 
@@ -54,7 +54,7 @@ public class BastardMapLogger
         mTimeFormatter.setTimeZone(TimeZone.getTimeZone(mTimeZone));
     }
 
-    public boolean addLogEventsInterface( BastardMapLogEventsInterface lofInterface)
+    public boolean addLogEventsInterface( BastardLogEventsInterface lofInterface)
     {
         if( lofInterface != null )
         {
@@ -81,11 +81,11 @@ public class BastardMapLogger
 
     private void notifyOnNewEntry( LogEntry newEntry )
     {
-        Iterator< BastardMapLogEventsInterface > it = mSubsciptions.iterator();
+        Iterator<BastardLogEventsInterface> it = mSubsciptions.iterator();
 
         while(it.hasNext())
         {
-            BastardMapLogEventsInterface bIf = it.next();
+            BastardLogEventsInterface bIf = it.next();
 
             if( bIf != null) {
                 bIf.onNewLogEntry(getFormatEntryString(newEntry));

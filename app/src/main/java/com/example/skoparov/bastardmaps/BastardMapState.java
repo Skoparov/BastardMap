@@ -2,13 +2,12 @@ package com.example.skoparov.bastardmaps;
 
 import com.google.android.gms.maps.model.CameraPosition;
 
-
 public class BastardMapState
 {
-    public CameraPosition prevCameraPosition;
+    public CameraPosition cameraPosition;
 
-    public BastardMapState( CameraPosition prevCamPos )
+    public BastardMapState( CameraPosition cameraPos )
     {
-        prevCameraPosition = prevCamPos;
+        cameraPosition = cameraPos;
     }
 }
