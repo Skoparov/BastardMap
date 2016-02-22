@@ -6,8 +6,8 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
 
 public class BastardMapEventsHandler implements
         GoogleApiClient.ConnectionCallbacks,
@@ -15,7 +15,7 @@ public class BastardMapEventsHandler implements
         LocationListener
 
 {
-    private Vector< BastardMapEventsInterface > mInterfaces = new Vector<>();
+    private ArrayList< BastardMapEventsInterface > mInterfaces = new ArrayList<>();
     private boolean mBlock = true;
 
     @Override

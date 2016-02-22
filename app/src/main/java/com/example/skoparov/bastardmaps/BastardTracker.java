@@ -6,7 +6,10 @@ import android.content.Context;
 import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.FileOutputStream;
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 
 public class BastardTracker extends Activity
 {
@@ -45,7 +48,9 @@ public class BastardTracker extends Activity
     private boolean mIsRecording = false;
     private boolean mIsPaused = false;
     private BastardMapState mPrevMapState;
-    private Vector< BastardTrack > mTracks = new Vector<>();
+    private HashMap<String, BastardPath> mPaths = new HashMap<>();
+    private List< String > mSwitchedPaths = new ArrayList<>();
+    private ArrayList< BastardPaintEventsInterface > mPainterSubsriptions = new ArrayList<>();
 
     public BastardTracker( MapPackage pack )
     {
@@ -57,11 +62,11 @@ public class BastardTracker extends Activity
         mP.apiClient.connect();
     }
 
-    public void startTrack()
+    public void startPath()
     {
         mP.collector.setLogger(mP.logger);
         if(mIsRecording){
-            stopTrack();
+            stopPath();
         }
 
         mP.collector.clear();
@@ -69,21 +74,21 @@ public class BastardTracker extends Activity
         setRecording(true);
     }
 
-    public void stopTrack()
+    public void stopPath()
     {
         setRecording(false);
         mIsPaused = false;
         mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path stopped");
-        BastardTrack newTrack = mP.collector.getTrack();
+        BastardPath newPath = mP.collector.getTrack();
 
-        if( newTrack.size() != 0 )
+        if( newPath.size() != 0 )
         {
-            mTracks.addElement(mP.collector.getTrack());
+            mPaths.put(newPath.getName(), mP.collector.getTrack());
+
+            //TODO: savePath();
         }
 
         mP.collector.clear();
-
-        //TODO: saveTrack();
     }
 
     public void setPaused( boolean paused )
@@ -92,10 +97,10 @@ public class BastardTracker extends Activity
         mP.eventsHandler.setBlockEvents(paused);
     }
 
-    public void saveTrackToFile( BastardTrack t )
+    public void savePathToFile( BastardPath t )
     {
         String filename = BastardConverter.timeToStr(
-                t.getTrackPoints().firstElement().getTime());
+                t.getPoints().firstElement().getTime());
 
         try
         {
@@ -110,9 +115,44 @@ public class BastardTracker extends Activity
         }
     }
 
-    public Vector< BastardTrack > getTracks()
+    public boolean switchPaintPath( String name )
     {
-        return mTracks;
+        if( mPaths.containsKey(name) )
+        {
+            BastardPath p = mPaths.get(name);
+
+            if(mSwitchedPaths.contains(name)){
+                mSwitchedPaths.remove(name);
+            }
+            else
+            {
+                mSwitchedPaths.add(name);
+            }
+
+            notifyPaintSubscriptions(p);
+            return true;
+        }
+
+
+        mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                "Could not find path " + name);
+
+        return false;
+    }
+
+    public void subscribePaintInterface( BastardPaintEventsInterface paintIf )
+    {
+        mPainterSubsriptions.add(paintIf);
+    }
+
+    public List<String> getSwitchedPaths()
+    {
+        return mSwitchedPaths;
+    }
+
+    public HashMap<String, BastardPath> getPaths()
+    {
+        return mPaths;
     }
 
     public boolean isRecording()
@@ -125,12 +165,12 @@ public class BastardTracker extends Activity
         return mIsPaused;
     }
 
-    void setMapPackage(MapPackage p)
+    public void setMapPackage(MapPackage p)
     {
         mP = p;
     }
 
-    MapPackage getMapPackage()
+    public MapPackage getMapPackage()
     {
         return mP;
     }
@@ -145,10 +185,30 @@ public class BastardTracker extends Activity
         return mPrevMapState;
     }
 
+    // private methods
+
     private void setRecording( boolean recording )
     {
         mIsRecording = recording;
         mP.eventsHandler.setBlockEvents( !mIsRecording );
     }
 
+    private void notifyPaintSubscriptions(BastardPath p)
+    {
+        Iterator< BastardPaintEventsInterface > it = mPainterSubsriptions.iterator();
+
+        while( it.hasNext() )
+        {
+            BastardPaintEventsInterface curr = it.next();
+
+            if( curr != null)
+            {
+                curr.switchPaintPath(p);
+            }
+            else
+            {
+                it.remove();
+            }
+        }
+    }
 }

@@ -14,13 +14,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class BastardMapManager extends SupportMapFragment
              implements
              BastardMapEventsInterface,
+             BastardPaintEventsInterface,
              OnMapReadyCallback,
              GoogleMap.OnMapLongClickListener,
              GoogleMap.OnMapClickListener,
@@ -46,7 +45,7 @@ public class BastardMapManager extends SupportMapFragment
     private GoogleMap mMap;
     private MapManagerPackage mP;
     private CameraPosition mCamPos;
-    private BastardTrackPainter mPainter;
+    private BastardPathPainter mPainter;
     private TextView mDebugView; // TODO: Remove later
 
     // public methods
@@ -69,7 +68,7 @@ public class BastardMapManager extends SupportMapFragment
         //create painter
         mPainter = BastardFactory.getPainter(
                 mMap,
-                new BastardTrackPainter.PainterSettings( 5, Color.RED));
+                new BastardPathPainter.PainterSettings( 5, Color.RED));
 
         tuneMap();
         restoreMap();
@@ -77,6 +76,24 @@ public class BastardMapManager extends SupportMapFragment
 
         addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                 "Map ready");
+    }
+
+    @Override
+    public void switchPaintPath(BastardPath path)
+    {
+        if(mPainter != null)
+        {
+            String name = path.getName();
+
+            if(mPainter.containsOtherPath(name))
+            {
+                mPainter.removeOtherPath(name);
+            }
+            else
+            {
+                mPainter.loadOtherPath(path.getPointsAsList(), name);
+            }
+        }
     }
 
     @Override
@@ -99,11 +116,7 @@ public class BastardMapManager extends SupportMapFragment
 //        Location targetLocation = new Location("");//provider name is unecessary
 //        targetLocation.setLatitude(latLng.latitude);//your coords of course
 //        targetLocation.setLongitude(latLng.longitude);
-//
-//        if(mPainter != null)
-//        {
-//            mPainter.addPoint(targetLocation);
-//        }
+
 
         //TODO smth cool
     }
@@ -203,17 +216,8 @@ public class BastardMapManager extends SupportMapFragment
     private void restoreMap()
     {
         //resstore path
-        BastardTrack lastTrack = mP.collector.getTrack();
-        List<LatLng> points = new ArrayList<>();
-
-        Iterator< Location > it = lastTrack.getTrackPoints().iterator();
-        while(it.hasNext())
-        {
-            Location l = it.next();
-            points.add( new LatLng( l.getLatitude(), l.getLongitude() ) );
-        }
-
-        mPainter.loadPath(points);
+        BastardPath lastTrack = mP.collector.getTrack();
+        mPainter.loadCurrPath(lastTrack.getPointsAsList());
 
         //restore cam position
         if( mCamPos != null )

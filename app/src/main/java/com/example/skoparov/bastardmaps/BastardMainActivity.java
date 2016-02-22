@@ -94,6 +94,7 @@ public class BastardMainActivity
             mMapManager.getMapAsync(this);
 
             trackerPackage.eventsHandler.addCallbackInterface(mMapManager);
+            t.subscribePaintInterface(mMapManager);
             restoreMapState();
 
             // add map to view
@@ -196,10 +197,10 @@ public class BastardMainActivity
             if(newMode)
             {
                 mMapManager.startNewPath();
-                mService.getTracker().startTrack();
+                mService.getTracker().startPath();
             } else
             {
-                mService.getTracker().stopTrack();
+                mService.getTracker().stopPath();
             }
 
             updatePathStatusButtonTitle(newMode);
@@ -283,24 +284,6 @@ public class BastardMainActivity
     private void startTrackListActivity()
     {
         Intent intent = new Intent(this, BastardTrackListActivity.class);
-        String tracks = new String();
-
-        Iterator<BastardTrack> it = mService.getTracker().getTracks().iterator();
-        while(it.hasNext())
-        {
-            BastardTrack t = it.next();
-            if( t.size() != 0 )
-            {
-                tracks+=BastardConverter.timeToStr(
-                        t.getTrackPoints().firstElement().getTime()) + ";";
-            }
-            else
-            {
-                int i = 0;
-            }
-        }
-
-        intent.putExtra(BastardConstants.KEYS.TRACK_LIST_KEY, tracks);
         startActivity(intent);
     }
 

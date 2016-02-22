@@ -24,9 +24,9 @@ public final class BastardFactory
         return new BastardLogger();
     }
 
-    public static BastardTrackPainter getPainter( GoogleMap map, BastardTrackPainter.PainterSettings settings )
+    public static BastardPathPainter getPainter( GoogleMap map, BastardPathPainter.PainterSettings settings )
     {
-        return new BastardTrackPainter(map, settings);
+        return new BastardPathPainter(map, settings);
     }
 
     public static BastardMapManager getMapManager( BastardMapManager.MapManagerPackage p )

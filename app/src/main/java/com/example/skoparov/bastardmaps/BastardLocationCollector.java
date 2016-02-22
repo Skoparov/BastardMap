@@ -2,14 +2,12 @@ package com.example.skoparov.bastardmaps;
 
 import android.location.Location;
 
-import java.util.Iterator;
-
 public class BastardLocationCollector
         implements
         BastardMapEventsInterface
 {
 
-    private BastardTrack mTrack = new BastardTrack();
+    private BastardPath mTrack = new BastardPath();
     private BastardLogger logger;
 
     // public methods
@@ -23,10 +21,10 @@ public class BastardLocationCollector
 
     public void clear()
     {
-        mTrack = new BastardTrack();
+        mTrack = new BastardPath();
     }
 
-    public BastardTrack getTrack()
+    public BastardPath getTrack()
     {
         return mTrack;
     }
@@ -43,6 +41,6 @@ public class BastardLocationCollector
     {
         logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                 "Dist = " + mTrack.getTrackLength() + " m \n" +
-                "Time = " + mTrack.getTrackDuration() / 1000 + " sec");
+                "Time = " + mTrack.getPathDuration() / 1000 + " sec");
     }
 }
