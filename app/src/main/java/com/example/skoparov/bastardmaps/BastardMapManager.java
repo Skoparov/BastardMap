@@ -191,6 +191,7 @@ public class BastardMapManager extends SupportMapFragment
             mMap.setMyLocationEnabled(true);
             mMap.getUiSettings().setZoomControlsEnabled(true);
             mMap.getUiSettings().setRotateGesturesEnabled(false);
+            mMap.getUiSettings().setMapToolbarEnabled(true);
         }
         catch ( SecurityException e )
         {

@@ -8,6 +8,17 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:id="@+id/content_log">
-    tools:context="com.example.skoparov.bastardmaps.BastardLogActivity">
+
+    <ScrollView
+        android:id="@+id/log_scroll"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:fillViewport="true" >
+        <TextView
+            android:id="@+id/log_text"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left" />
+    </ScrollView>
 
 </RelativeLayout>

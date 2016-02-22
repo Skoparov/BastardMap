@@ -22,6 +22,7 @@ public final class BastardConstants
         public static String BUTTON_PATH_IS_ONGOING = "Stop path";
         public static String BUTTON_PATH_IS_PAUSED = "Continue path";
         public static String BUTTON_PATH_IS_NOT_PAUSED = "Pause path";
+        public static int MAX_LOG_LINES = 16000;
     }
 
     public interface REQUESTS

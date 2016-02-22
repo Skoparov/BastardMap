@@ -3,6 +3,7 @@ package com.example.skoparov.bastardmaps;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.design.widget.NavigationView;
@@ -86,7 +87,10 @@ public class BastardMainActivity
                             trackerPackage.apiClient,
                             trackerPackage.collector));
 
-            mMapManager.setDebugView((TextView) findViewById(R.id.tap_text)); // DEBUG, remove later
+            TextView debugView = (TextView) findViewById(R.id.tap_text);
+            debugView.setBackgroundColor(Color.WHITE);
+
+            mMapManager.setDebugView(debugView); // DEBUG, remove later
             mMapManager.getMapAsync(this);
 
             trackerPackage.eventsHandler.addCallbackInterface(mMapManager);
@@ -273,8 +277,6 @@ public class BastardMainActivity
     private void startLogActivity()
     {
         Intent intent = new Intent(this, BastardLogActivity.class);
-        intent.putExtra(BastardConstants.KEYS.LOG_KEY, mLogger.getSerializedLog());
-
         startActivity(intent);
     }
 
