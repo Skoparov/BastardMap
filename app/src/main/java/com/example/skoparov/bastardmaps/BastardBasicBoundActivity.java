@@ -32,8 +32,8 @@ public class BastardBasicBoundActivity extends AppCompatActivity
     }
 
     protected BastardLocationUpdateService mService;
-    protected boolean mIsBound;
     protected BastardConnection mConnection;
+    protected boolean mIsBound;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -44,10 +44,9 @@ public class BastardBasicBoundActivity extends AppCompatActivity
         bindToLocationUpdateService();
     }
 
-    protected void createServiceDependant()
-    {
-        int i  = 0 ;
-    }
+    // All instantiation that requires Service
+    // to be already instantiated must be implemented here
+    protected void createServiceDependant() {}
 
     @Override
     public void onDestroy()
@@ -65,14 +64,5 @@ public class BastardBasicBoundActivity extends AppCompatActivity
     {
         Intent intent = new Intent(this, BastardLocationUpdateService.class);
         bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-
-//        try
-//        {
-//            mConnection.waitUntilConnected();
-//        }
-//        catch(InterruptedException e)
-//        {
-//            //TODO implement handling
-//        }
     }
 }

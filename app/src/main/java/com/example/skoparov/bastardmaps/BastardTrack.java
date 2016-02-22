@@ -3,12 +3,16 @@ package com.example.skoparov.bastardmaps;
 
 import android.location.Location;
 
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 import java.util.Vector;
 
 public class BastardTrack
 {
-    private Vector<BastardPosition> mTrackPoints;
+    private Vector<Location> mTrackPoints;
 
     //public methods
 
@@ -17,12 +21,12 @@ public class BastardTrack
         mTrackPoints = new Vector<>();
     }
 
-    public BastardTrack( Vector<BastardPosition> track )
+    public BastardTrack( Vector<Location> track )
     {
         mTrackPoints = track;
     }
 
-    public void addPosition( BastardPosition p )
+    public void addPosition( Location p )
     {
         mTrackPoints.add(p);
     }
@@ -34,16 +38,16 @@ public class BastardTrack
 
     public float getTrackLength()
     {
-        Iterator<BastardPosition> it = mTrackPoints.iterator();
+        Iterator<Location> it = mTrackPoints.iterator();
         float totalDist = 0;
 
         while(it.hasNext())
         {
-            BastardPosition start = it.next();
+            Location start = it.next();
 
             if(it.hasNext())
             {
-                BastardPosition end = it.next();
+                Location end = it.next();
                 totalDist += distanceBetween(start, end);
             }
             else{
@@ -60,9 +64,9 @@ public class BastardTrack
 
         if(mTrackPoints.size() >= 2)
         {
-            BastardPosition start = mTrackPoints.firstElement();
-            BastardPosition end = mTrackPoints.lastElement();
-            duration = end.time - start.time;
+            Location start = mTrackPoints.firstElement();
+            Location end = mTrackPoints.lastElement();
+            duration = end.getTime() - start.getTime();
         }
 
         return duration;
@@ -73,21 +77,40 @@ public class BastardTrack
         return getTrackLength() / getTrackDuration();
     }
 
-    public Vector<BastardPosition> getTrackPoints()
+    public Vector<Location> getTrackPoints()
     {
         return mTrackPoints;
     }
 
+    public long size()
+    {
+        return mTrackPoints.size();
+    }
+
+    public void save(FileOutputStream out) throws IOException {
+        Iterator<Location> it = mTrackPoints.iterator();
+
+        while(it.hasNext())
+        {
+            Location l = it.next();
+            out.write(Long.toString(l.getTime()).getBytes());
+            out.write(Double.toString(l.getLatitude()).getBytes());
+            out.write(Double.toString(l.getLongitude()).getBytes());
+        }
+    }
+
     // private methods
 
-    private float distanceBetween(BastardPosition start, BastardPosition end)
+    private float distanceBetween(Location start, Location end)
     {
         float[] results = new float[1];
 
-        Location.distanceBetween(start.location.getLatitude(), start.location.getLongitude(),
-                                end.location.getLatitude(), end.location.getLongitude(),
+        Location.distanceBetween(start.getLatitude(), start.getLongitude(),
+                                end.getLatitude(), end.getLongitude(),
                                 results);
 
         return results[0];
     }
 }
+
+

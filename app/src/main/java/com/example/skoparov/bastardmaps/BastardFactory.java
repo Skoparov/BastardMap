@@ -7,7 +7,7 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.GoogleMap;
 
-public class BastardFactory
+public final class BastardFactory
 {
     public static LocationRequest getLocationRequest( Integer interval )
     {
@@ -24,21 +24,16 @@ public class BastardFactory
         return new BastardLogger();
     }
 
-    public static BastardMapManager getMapManager( GoogleApiClient client, BastardLogger logger )
+    public static BastardTrackPainter getPainter( GoogleMap map, BastardTrackPainter.PainterSettings settings )
     {
-        BastardMapManager manager = new BastardMapManager();
-        manager.setGoogleApiClient(client);
-        manager.setLogger(logger);
-
-        return manager;
+        return new BastardTrackPainter(map, settings);
     }
 
-    public static BastardTrackPainter getPainter( GoogleMap map,
-                                                int pathWidth,
-                                                int pathColor)
+    public static BastardMapManager getMapManager( BastardMapManager.MapManagerPackage p )
     {
-        return new BastardTrackPainter( map,
-               new BastardTrackPainter.PainterSettings(pathWidth, pathColor));
+        BastardMapManager manager = new BastardMapManager();
+        manager.setMapMapagerPackage(p);
+        return manager;
     }
 
     public static BastardTracker getBastardTracker(Activity parentActivity,
@@ -48,24 +43,22 @@ public class BastardFactory
         BastardMapEventsHandler eventsHandler = new BastardMapEventsHandler();
         BastardLocationCollector storage = new BastardLocationCollector();
 
-        BastardLocationSubscriber locationSubscriber
-                = new BastardLocationSubscriber(
-                eventsHandler,
-                BastardFactory.getLocationRequest(interval),
-                parentActivity,
-                logger );
-
         GoogleApiClient apiClient = new GoogleApiClient.Builder(parentActivity)
                 .addConnectionCallbacks( eventsHandler )
-                .addConnectionCallbacks( locationSubscriber )
                 .addOnConnectionFailedListener( eventsHandler)
                 .addApi(LocationServices.API)
                 .build();
 
-        eventsHandler.addCallbackInterface(storage);
+        BastardLocationSubscriber locationSubscriber
+                = new BastardLocationSubscriber(
+                eventsHandler,
+                apiClient,
+                BastardFactory.getLocationRequest(interval),
+                parentActivity,
+                logger );
 
-        locationSubscriber.setGoogleApiClient(apiClient);
-        apiClient.connect();
+        apiClient.registerConnectionCallbacks(locationSubscriber);
+        eventsHandler.addCallbackInterface(storage);
 
         return new BastardTracker(
                 new BastardTracker.MapPackage(

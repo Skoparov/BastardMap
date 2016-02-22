@@ -5,6 +5,5 @@ import com.google.android.gms.common.ConnectionResult;
 
 public interface BastardMapEventsInterface
 {
-    //public void onConnectionReady();
-    public void onPositionChanged( long time, Location newLocation);
+    public void onPositionChanged( Location newLocation);
 }

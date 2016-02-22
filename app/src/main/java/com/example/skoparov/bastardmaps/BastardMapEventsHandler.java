@@ -41,13 +41,12 @@ public class BastardMapEventsHandler implements
     {
         if( !mBlock )
         {
-            long currTime = System.currentTimeMillis();
             Iterator<BastardMapEventsInterface> it = mInterfaces.iterator();
 
             while (it.hasNext()) {
                 BastardMapEventsInterface bIf = it.next();
                 if (bIf != null) {
-                    bIf.onPositionChanged(currTime, location);
+                    bIf.onPositionChanged(location);
                 } else {
                     it.remove();
                 }

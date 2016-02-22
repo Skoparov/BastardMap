@@ -15,15 +15,15 @@ public class BastardLocationCollector
     // public methods
 
     @Override
-    public void onPositionChanged(long time, Location newLocation)
+    public void onPositionChanged( Location newLocation)
     {
-        mTrack.addPosition( new BastardPosition(time, newLocation) );
+        mTrack.addPosition( newLocation );
         printTrack();
     }
 
     public void clear()
     {
-        mTrack.clear();
+        mTrack = new BastardTrack();
     }
 
     public BastardTrack getTrack()

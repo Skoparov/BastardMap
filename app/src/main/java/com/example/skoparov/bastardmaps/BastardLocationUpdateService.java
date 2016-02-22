@@ -12,8 +12,9 @@ import android.os.IBinder;
 import android.support.v7.app.NotificationCompat;
 import android.widget.Toast;
 
-public class BastardLocationUpdateService extends Service
+public final class BastardLocationUpdateService extends Service
 {
+    // Bins action to service
     public class LocalBinder extends Binder
     {
         BastardLocationUpdateService getService()
@@ -26,6 +27,8 @@ public class BastardLocationUpdateService extends Service
     private BastardMainActivity mActivity;
     private final IBinder mBinder = new LocalBinder();
     public static boolean IS_RUNNING = false;
+
+    // public methods
 
     public void setTracker( BastardTracker tracker )
     {
@@ -51,26 +54,16 @@ public class BastardLocationUpdateService extends Service
 
     public int onStartCommand(Intent intent, int flags, int startId)
     {
-        if(intent.getAction().equals(BastardConstants.ACTION.STARTFOREGROUND_ACTION))
+        String action = intent.getAction();
+
+        if(action.equals(BastardConstants.ACTION.STARTFOREGROUND_ACTION))
         {
             showNotification();
             IS_RUNNING = true;
             notifyActivity();
             Toast.makeText(this, "Location Updating Started", Toast.LENGTH_SHORT).show();
         }
-        else if (intent.getAction().equals(BastardConstants.ACTION.PREV_ACTION))
-        {
-            Toast.makeText(this, "Clicked Previous!", Toast.LENGTH_SHORT).show();
-        }
-        else if (intent.getAction().equals(BastardConstants.ACTION.PLAY_ACTION))
-        {
-            Toast.makeText(this, "Clicked Play!", Toast.LENGTH_SHORT).show();
-        }
-        else if (intent.getAction().equals(BastardConstants.ACTION.NEXT_ACTION))
-        {
-            Toast.makeText(this, "Clicked Next!", Toast.LENGTH_SHORT).show();
-        }
-        else if (intent.getAction().equals(BastardConstants.ACTION.STOPFOREGROUND_ACTION))
+        else if (action.equals(BastardConstants.ACTION.STOPFOREGROUND_ACTION))
         {
             Toast.makeText(this, "Location Updating Stopped", Toast.LENGTH_SHORT).show();
             stopForeground(true);
@@ -78,9 +71,20 @@ public class BastardLocationUpdateService extends Service
             notifyActivity();
             stopSelf();
         }
+        else if(action.equals( BastardConstants.ACTION.STOPFOREGROUND_ACTION ) )
+        {
+            // TODO: Implement
+        }
 
         return START_STICKY;
     }
+
+    public IBinder onBind(Intent intent)
+    {
+        return mBinder;
+    }
+
+    // private methods
 
     private void showNotification()
     {
@@ -90,17 +94,9 @@ public class BastardLocationUpdateService extends Service
 
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notifIntent, 0);
 
-        Intent previousIntent = new Intent(this, BastardLocationUpdateService.class);
-        previousIntent.setAction(BastardConstants.ACTION.PREV_ACTION);
-        PendingIntent ppreviousIntent = PendingIntent.getService(this, 0, previousIntent, 0);
-
-        Intent playIntent = new Intent(this, BastardLocationUpdateService.class);
-        playIntent.setAction(BastardConstants.ACTION.PLAY_ACTION);
-        PendingIntent pplayIntent = PendingIntent.getService(this, 0, playIntent, 0);
-
-        Intent nextIntent = new Intent(this, BastardLocationUpdateService.class);
-        nextIntent.setAction(BastardConstants.ACTION.NEXT_ACTION);
-        PendingIntent pnextIntent = PendingIntent.getService(this, 0, nextIntent, 0);
+//        Intent stopStartLocUpdateIntent = new Intent(this, BastardLocationUpdateService.class);
+//        stopStartLocUpdateIntent.setAction(BastardConstants.ACTION.PREV_ACTION);
+//        PendingIntent pStartStopIntent = PendingIntent.getService(this, 0, previousIntent, 0);
 
         Bitmap icon = BitmapFactory.decodeResource(getResources(),
                 R.mipmap.ic_launcher);
@@ -113,9 +109,7 @@ public class BastardLocationUpdateService extends Service
                 .setLargeIcon(Bitmap.createScaledBitmap(icon, 128, 128, false))
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
-                .addAction(android.R.drawable.ic_media_previous, "Previous", ppreviousIntent)
-                .addAction(android.R.drawable.ic_media_play, "Play", pplayIntent)
-                .addAction(android.R.drawable.ic_media_next, "Next", pnextIntent).build();
+                .build();
 
         startForeground(BastardConstants.NOTIFICATION_ID.FOREGROUND_SERVICE, notification);
     }
@@ -126,12 +120,5 @@ public class BastardLocationUpdateService extends Service
         {
             mActivity.onServiceStatusChanged( IS_RUNNING );
         }
-    }
-
-
-
-    public IBinder onBind(Intent intent)
-    {
-        return mBinder;
     }
 }

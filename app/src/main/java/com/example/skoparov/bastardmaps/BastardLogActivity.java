@@ -9,7 +9,7 @@ import android.util.AttributeSet;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-public class BastardLogActivity
+public final class BastardLogActivity
         extends BastardBasicBoundActivity
         implements BastardLogEventsInterface
 {
@@ -50,6 +50,7 @@ public class BastardLogActivity
                 maxY = y;
             }
         }
+
         public void scrollToBottom()
         {
             this.scrollTo(0, maxY);
@@ -65,7 +66,7 @@ public class BastardLogActivity
         setContentView(R.layout.activity_bastard_log);
 
         Intent intent = getIntent();
-        String log = intent.getStringExtra( BastardConstants.MISC.LOG_KEY );
+        String log = intent.getStringExtra( BastardConstants.KEYS.LOG_KEY );
 
         mLogView = new ScrollTextView(this);
         mLogView.setMovementMethod(new ScrollingMovementMethod());
@@ -74,7 +75,6 @@ public class BastardLogActivity
 
         RelativeLayout layout = (RelativeLayout) findViewById(R.id.content_log);
         layout.addView(mLogView);
-
     }
 
     @Override
@@ -90,7 +90,7 @@ public class BastardLogActivity
             p.logger.addLogEventsInterface(this);
         }
 
-        //mLogView.scrollToBottom();
+        //TODO: mLogView.scrollToBottom();
     }
 
     @Override

@@ -49,8 +49,13 @@
                 android:value="com.example.skoparov.bastardmaps.BastardMainActivity" />
         </activity>
 
-        <service android:name=".BastardLocationUpdateService"></service>
+        <service android:name=".BastardLocationUpdateService" />
 
+        <activity android:name=".BastardTrackListActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="com.example.skoparov.bastardmaps.BastardMainActivity" />
+        </activity>
     </application>
 
 </manifest>

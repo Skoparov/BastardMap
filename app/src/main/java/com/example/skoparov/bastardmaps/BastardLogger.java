@@ -9,7 +9,7 @@ import java.util.TimeZone;
 import java.util.TreeSet;
 import java.util.Vector;
 
-public class BastardLogger
+public final class BastardLogger
 {
     public enum EntryType
     {
@@ -18,6 +18,8 @@ public class BastardLogger
         LOG_ENTRY_ERROR
     }
 
+
+    //represents single log entry
     public class LogEntry implements Comparable< LogEntry >
     {
         public String message;
@@ -38,6 +40,7 @@ public class BastardLogger
         }
     }
 
+    //typedef
     public class LogStorage extends TreeSet< LogEntry > {}
 
     private LogStorage mLog;
@@ -45,11 +48,13 @@ public class BastardLogger
     private DateFormat mTimeFormatter;
     private Vector<BastardLogEventsInterface> mSubsciptions = new Vector<>();
 
+    //public methods
+
     public BastardLogger()
     {
         mLog = new LogStorage();
 
-        getTimeZone();
+        mTimeZone = BastardConstants.getTimeZone();
         mTimeFormatter = new SimpleDateFormat("HH:mm:ss");
         mTimeFormatter.setTimeZone(TimeZone.getTimeZone(mTimeZone));
     }
@@ -76,8 +81,18 @@ public class BastardLogger
 
     public String getSerializedLog()
     {
-        return serialize();
+        Iterator< LogEntry > iterator = mLog.iterator();
+        String result = new String();
+
+        while (iterator.hasNext())
+        {
+            result += getFormatEntryString( iterator.next() );
+        }
+
+        return result;
     }
+
+    //private methods
 
     private void notifyOnNewEntry( LogEntry newEntry )
     {
@@ -96,19 +111,6 @@ public class BastardLogger
         }
     }
 
-    private String serialize( )
-    {
-        Iterator< LogEntry > iterator = mLog.iterator();
-        String result = new String();
-
-        while (iterator.hasNext())
-        {
-            result += getFormatEntryString( iterator.next() );
-        }
-
-        return result;
-    }
-
     private  String getFormatEntryString( LogEntry entry )
     {
         String timeStamp = mTimeFormatter.format(new Date(entry.time));
@@ -119,24 +121,6 @@ public class BastardLogger
                 timeStamp,
                 typeStr,
                 entry.message );
-    }
-
-    private void getTimeZone()
-    {
-        mTimeZone = new String("GMT");
-        Calendar cal = Calendar.getInstance();
-        long milliDiff = cal.get(Calendar.ZONE_OFFSET);
-        String [] ids = TimeZone.getAvailableIDs();
-
-        for (String id : ids)
-        {
-            TimeZone tz = TimeZone.getTimeZone(id);
-            if (tz.getRawOffset() == milliDiff)
-            {
-                mTimeZone = id;
-                break;
-            }
-        }
     }
 
     private String entryTypeToString( EntryType type )

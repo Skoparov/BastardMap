@@ -13,6 +13,7 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.android.gms.common.api.ResultCallback;
 
+// Subscribes to location updates
 public class BastardLocationSubscriber implements
         GoogleApiClient.ConnectionCallbacks,
         ResultCallback<LocationSettingsResult>
@@ -26,20 +27,17 @@ public class BastardLocationSubscriber implements
     protected static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     public BastardLocationSubscriber(BastardMapEventsHandler eventsHandler,
+                                     GoogleApiClient googleApiClient,
                                      LocationRequest request,
                                      Activity parent,
                                      BastardLogger logger)
     {
         mEventsHandler = eventsHandler;
+        mGoogleApiClient = googleApiClient;
         mLocationRequestAdded = false;
         mLocationRequest = request;
         mParentActivity = parent;
         mLogger = logger;
-    }
-
-    public void setGoogleApiClient( GoogleApiClient googleApiClient )
-    {
-        mGoogleApiClient = googleApiClient;
     }
 
     @Override

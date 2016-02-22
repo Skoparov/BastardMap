@@ -14,6 +14,17 @@
             android:id="@+id/path_option"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Start new path" />
+        <item
+            android:id="@+id/path_pause_continue_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Pause path" />
+    </group>
+
+    <group android:id="@+id/trackListGroup" android:checkableBehavior="single" >
+        <item
+            android:id="@+id/track_list_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Track list" />
     </group>
 
 </menu>

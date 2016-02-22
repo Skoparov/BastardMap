@@ -14,8 +14,17 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
-public class BastardMainActivity extends BastardBasicBoundActivity
-        implements NavigationView.OnNavigationItemSelectedListener
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.OnMapReadyCallback;
+
+import java.util.Iterator;
+
+public class BastardMainActivity
+        extends
+        BastardBasicBoundActivity
+        implements
+        NavigationView.OnNavigationItemSelectedListener,
+        OnMapReadyCallback
 {
     private BastardLogger mLogger;
     private BastardMapManager mMapManager;
@@ -26,10 +35,15 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         super.createServiceDependant();
 
         createMenus();
+
+        setButtonVisible(false, R.id.path_option);
+        setButtonVisible(false, R.id.path_pause_continue_option);
+        setButtonVisible(false, R.id.service_option);
+
         restoreLogger();
 
         // Create map stuff
-        if( checkPermissions() )
+        if( checkLocationAccessPermissions() )
         {
             mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                     "Location permissions granted");
@@ -47,6 +61,8 @@ public class BastardMainActivity extends BastardBasicBoundActivity
             BastardTracker t =
                     BastardFactory.getBastardTracker(this, 1000, mLogger);
 
+            t.connect();
+
             mService.setTracker(t);
             mService.setActivity(this);
 
@@ -57,24 +73,35 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         updateServiceButtonTitle(true, false);
 
         BastardTracker t = mService.getTracker();
-        if( t.getMapPackage().isValid() )
+        BastardTracker.MapPackage trackerPackage = t.getMapPackage();
+
+        if( trackerPackage.isValid() )
         {
-            BastardTracker.MapPackage p = t.getMapPackage();
-            TextView debugView = (TextView) findViewById(R.id.tap_text); //TODO remove later
+            updatePathStatusButtonTitle(t.isRecording());
 
             //create map
-            mMapManager = BastardFactory.getMapManager(p.apiClient, mLogger);
-            mMapManager.setTestTextView(debugView); // DEBUG, remove later
-            mMapManager.getMapAsync(mMapManager);
+            mMapManager = BastardFactory.getMapManager(
+                    new BastardMapManager.MapManagerPackage(
+                            mLogger,
+                            trackerPackage.apiClient,
+                            trackerPackage.collector));
 
-            p.eventsHandler.addCallbackInterface(mMapManager);
+            mMapManager.setDebugView((TextView) findViewById(R.id.tap_text)); // DEBUG, remove later
+            mMapManager.getMapAsync(this);
+
+            trackerPackage.eventsHandler.addCallbackInterface(mMapManager);
             restoreMapState();
 
             // add map to view
             getSupportFragmentManager().beginTransaction().add(
                     R.id.fragment_container,
                     mMapManager).commit();
+
+            //show buttons
+            setButtonVisible(true, R.id.service_option);
         }
+
+
     }
 
     public void onServiceStatusChanged( boolean isRunning )
@@ -150,6 +177,10 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         {
             startLogActivity();
         }
+        if (id == R.id.track_list_option)
+        {
+            startTrackListActivity();
+        }
         else if(id == R.id.service_option)
         {
             boolean currentState = BastardLocationUpdateService.IS_RUNNING;
@@ -157,21 +188,28 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         }
         else if(id == R.id.path_option)
         {
-            if(mMapManager.getPainter() != null)
+            boolean newMode = !mService.getTracker().isRecording();
+            if(newMode)
             {
-                boolean isRunning = mService.getTracker().isRecording();
-                if(!isRunning)
-                {
-                    mMapManager.startNewPath();
-                    mService.getTracker().startTrack();
-                }
-                else
-                {
-                    mService.getTracker().stopTrack();
-                }
-
-                updatePathStatusButtonTitle(!isRunning);
+                mMapManager.startNewPath();
+                mService.getTracker().startTrack();
+            } else
+            {
+                mService.getTracker().stopTrack();
             }
+
+            updatePathStatusButtonTitle(newMode);
+            updatePathPauseButtonTitle(mService.getTracker().isPaused());
+
+            setButtonVisible(newMode, R.id.path_pause_continue_option);
+        }
+        else if( id == R.id.path_pause_continue_option)
+        {
+            BastardTracker t = mService.getTracker();
+            boolean newMode = !t.isPaused();
+            t.setPaused(newMode);
+
+            updatePathPauseButtonTitle( newMode );
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -179,17 +217,26 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         return true;
     }
 
-
     @Override
-    public void onSaveInstanceState(Bundle savedInstanceState)
-    {
+    public void onSaveInstanceState(Bundle savedInstanceState) {
         saveMapState(savedInstanceState);
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    // Custom functions
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMapManager.onMapReady(googleMap);
+        setButtonVisible(true, R.id.path_option);
 
-    void createMenus()
+        if( mService.getTracker().isRecording() )
+        {
+            setButtonVisible(true, R.id.path_pause_continue_option);
+
+            updatePathPauseButtonTitle(mService.getTracker().isPaused());
+        }
+    }
+
+    private void createMenus()
     {
         setContentView(R.layout.activity_bastard_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -206,7 +253,7 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         navigationView.setNavigationItemSelectedListener(this);
     }
 
-    void restoreLogger()
+    private void restoreLogger()
     {
         if(BastardLocationUpdateService.IS_RUNNING && mService != null)
         {
@@ -226,8 +273,32 @@ public class BastardMainActivity extends BastardBasicBoundActivity
     private void startLogActivity()
     {
         Intent intent = new Intent(this, BastardLogActivity.class);
-        intent.putExtra(BastardConstants.MISC.LOG_KEY, mLogger.getSerializedLog());
+        intent.putExtra(BastardConstants.KEYS.LOG_KEY, mLogger.getSerializedLog());
 
+        startActivity(intent);
+    }
+
+    private void startTrackListActivity()
+    {
+        Intent intent = new Intent(this, BastardTrackListActivity.class);
+        String tracks = new String();
+
+        Iterator<BastardTrack> it = mService.getTracker().getTracks().iterator();
+        while(it.hasNext())
+        {
+            BastardTrack t = it.next();
+            if( t.size() != 0 )
+            {
+                tracks+=BastardConverter.timeToStr(
+                        t.getTrackPoints().firstElement().getTime()) + ";";
+            }
+            else
+            {
+                int i = 0;
+            }
+        }
+
+        intent.putExtra(BastardConstants.KEYS.TRACK_LIST_KEY, tracks);
         startActivity(intent);
     }
 
@@ -247,7 +318,7 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         startService(service);
     }
 
-    private boolean checkPermissions()
+    private boolean checkLocationAccessPermissions()
     {
         return ActivityCompat.checkSelfPermission(
                         this,
@@ -295,21 +366,51 @@ public class BastardMainActivity extends BastardBasicBoundActivity
         }
     }
 
-    private void updatePathStatusButtonTitle( boolean isRunning )
+    private void setButtonTitle( String title, int id )
     {
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.getMenu().findItem(id).setTitle(title);
+    }
+
+    private void setButtonEnabled( boolean isEnabled, int id )
+    {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.getMenu().findItem(id).setEnabled(isEnabled);
+    }
+
+    private void setButtonVisible( boolean isVisible, int id )
+    {
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.getMenu().findItem(id).setVisible(isVisible);
+    }
+
+    //updaters
+    private void updatePathStatusButtonTitle( boolean isRunning )
+    {
         String serviceButtonTitle;
 
-            serviceButtonTitle = isRunning?
-                    BastardConstants.GUI.BUTTON_PATH_IS_ONGOING :
-                    BastardConstants.GUI.BUTTON_NO_ONGOING_PATH;
+        serviceButtonTitle = isRunning?
+                BastardConstants.GUI.BUTTON_PATH_IS_ONGOING :
+                BastardConstants.GUI.BUTTON_NO_ONGOING_PATH;
 
-        navigationView.getMenu().findItem(R.id.path_option).setTitle(serviceButtonTitle);
+        setButtonTitle(serviceButtonTitle, R.id.path_option);
+    }
+
+    //updaters
+    private void updatePathPauseButtonTitle( boolean isPaused )
+    {
+        String serviceButtonTitle;
+
+        serviceButtonTitle = isPaused?
+                BastardConstants.GUI.BUTTON_PATH_IS_PAUSED :
+                BastardConstants.GUI.BUTTON_PATH_IS_NOT_PAUSED;
+
+        setButtonTitle(serviceButtonTitle, R.id.path_pause_continue_option);
     }
 
     private void updateServiceButtonTitle(boolean checkService, boolean isRunning )
     {
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+
         String serviceButtonTitle;
 
         if(checkService)
@@ -325,6 +426,6 @@ public class BastardMainActivity extends BastardBasicBoundActivity
                     BastardConstants.GUI.BUTTON_SERVICE_IS_DORMANT;
         }
 
-        navigationView.getMenu().findItem(R.id.service_option).setTitle(serviceButtonTitle);
+        setButtonTitle(serviceButtonTitle, R.id.service_option);
     }
 }

@@ -1,9 +1,11 @@
 package com.example.skoparov.bastardmaps;
 
 import android.app.Activity;
+import android.content.Context;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
+import java.io.FileOutputStream;
 import java.util.Vector;
 
 public class BastardTracker extends Activity
@@ -14,18 +16,18 @@ public class BastardTracker extends Activity
         public BastardMapEventsHandler eventsHandler;
         public BastardLocationSubscriber subscriber;
         public BastardLogger logger;
-        public BastardLocationCollector storage;
+        public BastardLocationCollector collector;
 
         public MapPackage(GoogleApiClient apiClient,
                           BastardMapEventsHandler eventsHandler,
                           BastardLocationSubscriber subscriber,
-                          BastardLocationCollector storage,
+                          BastardLocationCollector collector,
                           BastardLogger logger)
         {
             this.apiClient = apiClient;
             this.eventsHandler = eventsHandler;
             this.subscriber = subscriber;
-            this.storage = storage;
+            this.collector = collector;
             this.logger = logger;
         }
 
@@ -35,12 +37,13 @@ public class BastardTracker extends Activity
                     eventsHandler != null &&
                     subscriber != null &&
                     logger != null &&
-                    storage != null;
+                    collector != null;
         }
     }
 
     private MapPackage mP;
     private boolean mIsRecording = false;
+    private boolean mIsPaused = false;
     private BastardMapState mPrevMapState;
     private Vector< BastardTrack > mTracks = new Vector<>();
 
@@ -49,14 +52,19 @@ public class BastardTracker extends Activity
         mP = pack;
     }
 
+    public void connect()
+    {
+        mP.apiClient.connect();
+    }
+
     public void startTrack()
     {
-        mP.storage.setLogger(mP.logger);
+        mP.collector.setLogger(mP.logger);
         if(mIsRecording){
             stopTrack();
         }
 
-        mP.storage.clear();
+        mP.collector.clear();
         mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path started");
         setRecording(true);
     }
@@ -64,52 +72,43 @@ public class BastardTracker extends Activity
     public void stopTrack()
     {
         setRecording(false);
+        mIsPaused = false;
         mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path stopped");
-        mTracks.add(mP.storage.getTrack());
+        BastardTrack newTrack = mP.collector.getTrack();
+
+        if( newTrack.size() != 0 )
+        {
+            mTracks.addElement(mP.collector.getTrack());
+        }
+
+        mP.collector.clear();
 
         //TODO: saveTrack();
     }
 
-//    public void saveTrack()
-//    {
-//        try
-//        {
-//            DataOutputStream out = new DataOutputStream(new FileOutputStream("test.txt"));
-//            Iterator<BastardPosition> it = mTracks.lastElement().getTrackPoints().iterator();
-//
-//            while( it.hasNext() )
-//            {
-//                BastardPosition pos = it.next();
-//                out.writeLong(pos.time);
-//                out.writeDouble(pos.location.getLatitude());
-//                out.writeDouble(pos.location.getLongitude());
-//            }
-//
-//            Vector<BastardPosition> i = new Vector<>();
-//            BastardTrack mTracks1 = new BastardTrack(i);
-//
-//            DataInputStream in = new DataInputStream(new FileInputStream("test.txt"));
-//            while(in.available() > 0)
-//            {
-//                long time = in.readLong();
-//                double lat = in.readDouble();
-//                double lon = in.readDouble();
-//
-//                Location targetLocation = new Location("");//provider name is unecessary
-//                targetLocation.setLatitude(lat);//your coords of course
-//                targetLocation.setLongitude(lon);
-//
-//                mTracks1.getTrackPoints().add(
-//                        new BastardPosition(time, targetLocation));
-//            }
-//
-//            int  asdi = 0;
-//        }
-//        catch(Exception e)
-//        {
-//
-//        }
-//    }
+    public void setPaused( boolean paused )
+    {
+        mIsPaused = paused;
+        mP.eventsHandler.setBlockEvents(paused);
+    }
+
+    public void saveTrackToFile( BastardTrack t )
+    {
+        String filename = BastardConverter.timeToStr(
+                t.getTrackPoints().firstElement().getTime());
+
+        try
+        {
+            FileOutputStream outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            t.save(outputStream);
+            outputStream.close();
+        }
+        catch (Exception e)
+        {
+            mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                   "Error saving track#" + filename );
+        }
+    }
 
     public Vector< BastardTrack > getTracks()
     {
@@ -119,6 +118,11 @@ public class BastardTracker extends Activity
     public boolean isRecording()
     {
         return mIsRecording;
+    }
+
+    public boolean isPaused()
+    {
+        return mIsPaused;
     }
 
     void setMapPackage(MapPackage p)
@@ -146,4 +150,5 @@ public class BastardTracker extends Activity
         mIsRecording = recording;
         mP.eventsHandler.setBlockEvents( !mIsRecording );
     }
+
 }
