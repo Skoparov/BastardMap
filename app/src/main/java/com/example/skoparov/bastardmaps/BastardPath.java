@@ -2,12 +2,18 @@ package com.example.skoparov.bastardmaps;
 
 
 import android.location.Location;
+import android.os.Parcel;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Polyline;
 
+import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -39,7 +45,8 @@ public class BastardPath
         mPathPoints.clear();
     }
 
-    public float getTrackLength()
+    // in meters
+    public float getDistance()
     {
         Iterator<Location> it = mPathPoints.iterator();
         float totalDist = 0;
@@ -61,7 +68,8 @@ public class BastardPath
         return totalDist;
     }
 
-    public float getPathDuration()
+    // in ms
+    public float getDuration()
     {
         long duration = 0;
 
@@ -75,21 +83,18 @@ public class BastardPath
         return duration;
     }
 
+    // in meters per second
     public float getAverageSpeed()
     {
-        return getTrackLength() / getPathDuration();
-    }
+        float aveSpeed = 0;
+        float duration = getDuration();
 
-    public void save(FileOutputStream out) throws IOException {
-        Iterator<Location> it = mPathPoints.iterator();
-
-        while(it.hasNext())
+        if( duration != 0 )
         {
-            Location l = it.next();
-            out.write(Long.toString(l.getTime()).getBytes());
-            out.write(Double.toString(l.getLatitude()).getBytes());
-            out.write(Double.toString(l.getLongitude()).getBytes());
+            aveSpeed = getDistance() / ( duration / 1000 );
         }
+
+        return aveSpeed;
     }
 
     public String getName()

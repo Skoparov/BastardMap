@@ -7,7 +7,7 @@ public class BastardLocationCollector
         BastardMapEventsInterface
 {
 
-    private BastardPath mTrack = new BastardPath();
+    private BastardPath mPath = new BastardPath();
     private BastardLogger logger;
 
     // public methods
@@ -15,18 +15,18 @@ public class BastardLocationCollector
     @Override
     public void onPositionChanged( Location newLocation)
     {
-        mTrack.addPosition( newLocation );
+        mPath.addPosition(newLocation);
         printTrack();
     }
 
     public void clear()
     {
-        mTrack = new BastardPath();
+        mPath = new BastardPath();
     }
 
-    public BastardPath getTrack()
+    public BastardPath getPath()
     {
-        return mTrack;
+        return mPath;
     }
 
     public void setLogger( BastardLogger l )
@@ -40,7 +40,7 @@ public class BastardLocationCollector
     private void printTrack(  )
     {
         logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
-                "Dist = " + mTrack.getTrackLength() + " m \n" +
-                "Time = " + mTrack.getPathDuration() / 1000 + " sec");
+                "Dist = " + mPath.getDistance() + " m \n" +
+                "Time = " + mPath.getDuration() / 1000 + " sec");
     }
 }

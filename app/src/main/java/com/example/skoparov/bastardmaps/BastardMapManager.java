@@ -14,8 +14,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.List;
-
 public class BastardMapManager extends SupportMapFragment
              implements
              BastardMapEventsInterface,
@@ -216,7 +214,7 @@ public class BastardMapManager extends SupportMapFragment
     private void restoreMap()
     {
         //resstore path
-        BastardPath lastTrack = mP.collector.getTrack();
+        BastardPath lastTrack = mP.collector.getPath();
         mPainter.loadCurrPath(lastTrack.getPointsAsList());
 
         //restore cam position

@@ -8,4 +8,15 @@
     <string name="title_activity_bastard_maps">BastardMap</string>
     <string name="title_activity_bastard_maps_log">BastardLog</string>
     <string name="title_activity_bastard_maps_track_list">BastardTracks</string>
+    <string name="domain">com.example.skoparov.bastardmaps</string>
+
+    <string-array name="titles">
+        <item>Home</item>
+        <item>Tutorials</item>
+        <item>My Apps</item>
+        <item>OS Versions</item>
+        <item>Tools</item>
+        <item>About Us</item>
+    </string-array>
+
 </resources>

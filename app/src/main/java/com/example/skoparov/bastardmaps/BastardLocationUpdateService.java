@@ -38,6 +38,7 @@ public final class BastardLocationUpdateService extends Service
     public void  setActivity( BastardMainActivity a )
     {
         mActivity = a;
+        mTracker.setActivity(a);
     }
 
     public BastardTracker getTracker()

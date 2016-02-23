@@ -1,17 +1,16 @@
 package com.example.skoparov.bastardmaps;
 
 import android.app.Activity;
-import android.content.Context;
+import android.widget.Toast;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 
-import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
-public class BastardTracker extends Activity
+public class BastardTracker
 {
     public static class MapPackage
     {
@@ -45,21 +44,45 @@ public class BastardTracker extends Activity
     }
 
     private MapPackage mP;
-    private boolean mIsRecording = false;
     private boolean mIsPaused = false;
+    private boolean mIsRecording = false;
     private BastardMapState mPrevMapState;
-    private HashMap<String, BastardPath> mPaths = new HashMap<>();
+    private BastardFileManager mFileManager;
+    private Activity mGuiActivity;
     private List< String > mSwitchedPaths = new ArrayList<>();
+    private HashMap<String, BastardPathDetails > mPathsList = new HashMap<>();
     private ArrayList< BastardPaintEventsInterface > mPainterSubsriptions = new ArrayList<>();
+
+    //public methods
 
     public BastardTracker( MapPackage pack )
     {
         mP = pack;
+        mFileManager = new BastardFileManager();
+    }
+
+    public void setActivity( Activity activity )
+    {
+        mGuiActivity = activity;
     }
 
     public void connect()
     {
         mP.apiClient.connect();
+    }
+
+    public void loadPathsBrief()
+    {
+        try
+        {
+            mPathsList = mFileManager.loadPathsList();
+            mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Paths loaded: OK");
+        }
+        catch(Exception e)
+        {
+            mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                    "Failed to load path list");
+        }
     }
 
     public void startPath()
@@ -79,13 +102,18 @@ public class BastardTracker extends Activity
         setRecording(false);
         mIsPaused = false;
         mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path stopped");
-        BastardPath newPath = mP.collector.getTrack();
+        BastardPath newPath = mP.collector.getPath();
+        String name = newPath.getName();
 
-        if( newPath.size() != 0 )
+        if( newPath.size() != 0)
         {
-            mPaths.put(newPath.getName(), mP.collector.getTrack());
+            BastardPathDetails d =
+                    new BastardPathDetails(name, BastardPathDetails.getPathDetails(newPath));
 
-            //TODO: savePath();
+            if(savePath(newPath, d))
+            {
+                mPathsList.put(name, d);
+            }
         }
 
         mP.collector.clear();
@@ -97,45 +125,59 @@ public class BastardTracker extends Activity
         mP.eventsHandler.setBlockEvents(paused);
     }
 
-    public void savePathToFile( BastardPath t )
+    public boolean deletePath( String pathName )
     {
-        String filename = BastardConverter.timeToStr(
-                t.getPoints().firstElement().getTime());
+        boolean ok = false;
+        String message = new String();
+        if(mPathsList.containsKey(pathName))
+        {
+            mPathsList.remove(pathName);
+            boolean ok1 = mFileManager.deleteFile(pathName);
+            boolean ok2 = mFileManager.deleteDetailsFile(pathName);
 
-        try
-        {
-            FileOutputStream outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            t.save(outputStream);
-            outputStream.close();
+            ok = ok1 && ok2;
+            message = ok? "Path" + pathName + " deleted" :
+                    "Failed to delete " + pathName;
         }
-        catch (Exception e)
+        else
         {
-            mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
-                   "Error saving track#" + filename );
+            message = "Could not find path " + pathName;
         }
+
+        sendToast(message);
+
+        return false;
     }
 
     public boolean switchPaintPath( String name )
     {
-        if( mPaths.containsKey(name) )
+        if( mPathsList.containsKey(name) )
         {
-            BastardPath p = mPaths.get(name);
-
-            if(mSwitchedPaths.contains(name)){
-                mSwitchedPaths.remove(name);
-            }
-            else
+            BastardPath p = null;
+            try
             {
-                mSwitchedPaths.add(name);
+                p = mFileManager.loadPath(name);
+
+                if(mSwitchedPaths.contains(name))
+                {
+                    mSwitchedPaths.remove(name);
+                }
+                else
+                {
+                    mSwitchedPaths.add(name);
+                }
+
+                notifyPaintSubscriptions(p);
+                sendToast("Path " + name + " added to map");
+                return true;
             }
+            catch(Exception e) {
+                mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                        "Failed to load path " + name);
 
-            notifyPaintSubscriptions(p);
-            return true;
+                sendToast("Failed to load path " + name);
+            }
         }
-
-
-        mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
-                "Could not find path " + name);
 
         return false;
     }
@@ -150,9 +192,9 @@ public class BastardTracker extends Activity
         return mSwitchedPaths;
     }
 
-    public HashMap<String, BastardPath> getPaths()
+    public HashMap<String, BastardPathDetails> getPathsList()
     {
-        return mPaths;
+        return mPathsList;
     }
 
     public boolean isRecording()
@@ -209,6 +251,54 @@ public class BastardTracker extends Activity
             {
                 it.remove();
             }
+        }
+    }
+
+    private boolean savePath(BastardPath p, BastardPathDetails d)
+    {
+        boolean isSavedOk = true;
+
+        try {
+            mFileManager.savePath(p);
+        }
+        catch(Exception e)
+        {
+            isSavedOk = false;
+            mFileManager.deleteFile(p.getName());
+            mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                    "Could not save path " + p.getName());
+
+            sendToast("Failed to save path " +  p.getName());
+        }
+
+        if(isSavedOk)
+        {
+            try {
+                mFileManager.savePathDetails(d);
+            }
+            catch(Exception e)
+            {
+                mFileManager.deleteFile(p.getName());
+                mFileManager.deleteDetailsFile(p.getName());
+
+                mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
+                        "Could not save path details" + p.getName());
+
+                isSavedOk = false;
+                sendToast("Failed to save path details for" + p.getName());
+            }
+        }
+
+        sendToast("Saved path " + p.getName());
+
+        return isSavedOk;
+    }
+
+    private void sendToast( String message )
+    {
+        if( mGuiActivity != null)
+        {
+            Toast.makeText(mGuiActivity, message, Toast.LENGTH_SHORT).show();
         }
     }
 }

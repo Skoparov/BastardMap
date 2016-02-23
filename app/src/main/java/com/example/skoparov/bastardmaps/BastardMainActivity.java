@@ -18,8 +18,6 @@ import android.widget.TextView;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 
-import java.util.Iterator;
-
 public class BastardMainActivity
         extends
         BastardBasicBoundActivity
@@ -63,6 +61,7 @@ public class BastardMainActivity
                     BastardFactory.getBastardTracker(this, 1000, mLogger);
 
             t.connect();
+            t.loadPathsBrief();
 
             mService.setTracker(t);
             mService.setActivity(this);
@@ -283,7 +282,7 @@ public class BastardMainActivity
 
     private void startTrackListActivity()
     {
-        Intent intent = new Intent(this, BastardTrackListActivity.class);
+        Intent intent = new Intent(this, BastardPathListActivity.class);
         startActivity(intent);
     }
 
