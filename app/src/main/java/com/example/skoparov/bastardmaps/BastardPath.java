@@ -138,13 +138,7 @@ public class BastardPath
 
     private float distanceBetween(Location start, Location end)
     {
-        float[] results = new float[1];
-
-        Location.distanceBetween(start.getLatitude(), start.getLongitude(),
-                                end.getLatitude(), end.getLongitude(),
-                                results);
-
-        return results[0];
+        return start.distanceTo(end);
     }
 }
 

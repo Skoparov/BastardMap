@@ -213,7 +213,7 @@ public class BastardMapManager extends SupportMapFragment
 
     private void restoreMap()
     {
-        //resstore path
+        //restore path
         BastardPath lastTrack = mP.collector.getPath();
         mPainter.loadCurrPath(lastTrack.getPointsAsList());
 

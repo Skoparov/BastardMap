@@ -156,9 +156,20 @@ public class BastardPathListFragment extends ListFragment
             public void run()
             {
                 List<String> selection = mTracker.getSwitchedPaths();
-                for (String key : selection) {
-                    int index = mRowItems.indexOf(key);
-                    if (index != -1) {
+                for (String key : selection)
+                {
+                    int index = -1;//mRowItems.indexOf(key);
+                    for(int item = 0; item < mRowItems.size(); ++item)
+                    {
+                        if(mRowItems.get(item).title == key)
+                        {
+                            index = item;
+                            break;
+                        }
+                    }
+
+                    if (index != -1)
+                    {
                         mListView.setItemChecked(index, true);
                         mListView.getChildAt(index).setBackgroundColor(getSelectionColor());
                     }

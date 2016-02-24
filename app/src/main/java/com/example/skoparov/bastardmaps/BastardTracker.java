@@ -44,11 +44,11 @@ public class BastardTracker
     }
 
     private MapPackage mP;
+    private Activity mGuiActivity;
     private boolean mIsPaused = false;
     private boolean mIsRecording = false;
     private BastardMapState mPrevMapState;
     private BastardFileManager mFileManager;
-    private Activity mGuiActivity;
     private List< String > mSwitchedPaths = new ArrayList<>();
     private HashMap<String, BastardPathDetails > mPathsList = new HashMap<>();
     private ArrayList< BastardPaintEventsInterface > mPainterSubsriptions = new ArrayList<>();
@@ -157,18 +157,21 @@ public class BastardTracker
             try
             {
                 p = mFileManager.loadPath(name);
+                String message = new String();
 
                 if(mSwitchedPaths.contains(name))
                 {
                     mSwitchedPaths.remove(name);
+                    message = "Path " + name + " removed from map";
                 }
                 else
                 {
                     mSwitchedPaths.add(name);
+                    message = "Path " + name + " added to map";
                 }
 
                 notifyPaintSubscriptions(p);
-                sendToast("Path " + name + " added to map");
+                sendToast(message);
                 return true;
             }
             catch(Exception e) {
