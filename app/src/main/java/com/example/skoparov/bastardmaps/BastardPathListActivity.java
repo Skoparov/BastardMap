@@ -1,12 +1,10 @@
 package com.example.skoparov.bastardmaps;
 
 import android.os.Bundle;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 
 public class BastardPathListActivity extends BastardBasicBoundActivity
 {

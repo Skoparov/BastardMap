@@ -21,7 +21,7 @@ public class BastardPathDetails
         return details;
     }
 
-    public static  String getPathDetails( String duration, String distance, String aveSpeed )
+    public static String getPathDetails( String duration, String distance, String aveSpeed )
     {
         String details = new String();
         details += "Duration: " + duration + " sec\n";

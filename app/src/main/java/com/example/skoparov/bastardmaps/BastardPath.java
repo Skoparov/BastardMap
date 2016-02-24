@@ -22,6 +22,7 @@ import java.util.Vector;
 public class BastardPath
 {
     private Vector<Location> mPathPoints;
+    private long mIdleTime = 0;
 
     //public methods
 
@@ -40,6 +41,11 @@ public class BastardPath
         mPathPoints.add(p);
     }
 
+    public void addIdleTime(  long time )
+    {
+        mIdleTime = time;
+    }
+
     public void clear()
     {
         mPathPoints.clear();
@@ -51,18 +57,11 @@ public class BastardPath
         Iterator<Location> it = mPathPoints.iterator();
         float totalDist = 0;
 
-        while(it.hasNext())
+        for( int locationPos = 0; locationPos < mPathPoints.size() - 1; ++locationPos)
         {
-            Location start = it.next();
-
-            if(it.hasNext())
-            {
-                Location end = it.next();
-                totalDist += distanceBetween(start, end);
-            }
-            else{
-                break;
-            }
+            Location start = mPathPoints.get(locationPos);
+            Location end = mPathPoints.get(locationPos + 1);
+            totalDist += distanceBetween(start, end);
         }
 
         return totalDist;
@@ -80,6 +79,8 @@ public class BastardPath
             duration = end.getTime() - start.getTime();
         }
 
+        duration -= mIdleTime;
+
         return duration;
     }
 
@@ -95,6 +96,11 @@ public class BastardPath
         }
 
         return aveSpeed;
+    }
+
+    public long getIdleTime()
+    {
+        return mIdleTime;
     }
 
     public String getName()

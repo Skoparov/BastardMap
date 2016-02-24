@@ -8,7 +8,8 @@ public class BastardLocationCollector
 {
 
     private BastardPath mPath = new BastardPath();
-    private BastardLogger logger;
+    private long mStartIdleTime = 0;
+    private BastardLogger mLogger;
 
     // public methods
 
@@ -17,6 +18,16 @@ public class BastardLocationCollector
     {
         mPath.addPosition(newLocation);
         printTrack();
+    }
+
+    public void setPaused( boolean isPaused )
+    {
+        if(  isPaused == true) {
+            mStartIdleTime = System.currentTimeMillis();
+        }
+        else {
+            mPath.addIdleTime( System.currentTimeMillis() - mStartIdleTime );
+        }
     }
 
     public void clear()
@@ -29,9 +40,9 @@ public class BastardLocationCollector
         return mPath;
     }
 
-    public void setLogger( BastardLogger l )
+    public void setmLogger(BastardLogger l)
     {
-        logger = l;
+        mLogger = l;
     }
 
     // private methods
@@ -39,8 +50,11 @@ public class BastardLocationCollector
     // TODO: Remove the following debug method
     private void printTrack(  )
     {
-        logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
-                "Dist = " + mPath.getDistance() + " m \n" +
-                "Time = " + mPath.getDuration() / 1000 + " sec");
+        if(mLogger != null)
+        {
+            mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
+                    "Dist = " + mPath.getDistance() + " m \n" +
+                            "Time = " + mPath.getDuration() / 1000 + " sec");
+        }
     }
 }

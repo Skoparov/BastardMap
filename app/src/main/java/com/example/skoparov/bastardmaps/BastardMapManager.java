@@ -105,15 +105,11 @@ public class BastardMapManager extends SupportMapFragment
         //TODO: remove the following debug info
         LatLng userCurrPos = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
         addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
-        mDebugView.setText("Pos: " + userCurrPos);
     }
 
     @Override
     public void onMapClick(LatLng latLng)
     {
-//        Location targetLocation = new Location("");//provider name is unecessary
-//        targetLocation.setLatitude(latLng.latitude);//your coords of course
-//        targetLocation.setLongitude(latLng.longitude);
 
 
         //TODO smth cool
@@ -122,9 +118,14 @@ public class BastardMapManager extends SupportMapFragment
     @Override
     public void onMapLongClick(LatLng latLng)
     {
+        Location targetLocation = new Location("");//provider name is unecessary
+        targetLocation.setLatitude(latLng.latitude);//your coords of course
+        targetLocation.setLongitude(latLng.longitude);
+
         if( mMap != null  )
         {
             mMap.addMarker(new MarkerOptions().position(latLng).title(latLng.toString()));
+            mP.collector.onPositionChanged( targetLocation );
         }
 
         //TODO  smth cool
@@ -222,5 +223,17 @@ public class BastardMapManager extends SupportMapFragment
         {
             mMap.moveCamera(CameraUpdateFactory.newCameraPosition(mCamPos));
         }
+    }
+
+    private void printDebugInfo()
+    {
+        BastardPath p = mP.collector.getPath();
+
+        String details = new String();
+        details += "Duration: " + String.format("%.2f", p.getDuration()/1000) + " sec\n";
+        details += "Distance: " + String.format("%.2f", p.getDistance() ) + " m\n";
+        details += "Avr. spd: " + String.format("%.2f", p.getAverageSpeed() ) + " m/sec\n";
+
+        mDebugView.setText(details);
     }
 }

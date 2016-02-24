@@ -38,6 +38,7 @@ public class BastardMainActivity
         setButtonVisible(false, R.id.path_option);
         setButtonVisible(false, R.id.path_pause_continue_option);
         setButtonVisible(false, R.id.service_option);
+        setButtonVisible(false, R.id.track_list_option);
 
         restoreLogger();
 
@@ -231,6 +232,7 @@ public class BastardMainActivity
     public void onMapReady(GoogleMap googleMap) {
         mMapManager.onMapReady(googleMap);
         setButtonVisible(true, R.id.path_option);
+        setButtonVisible(true, R.id.track_list_option);
 
         if( mService.getTracker().isRecording() )
         {

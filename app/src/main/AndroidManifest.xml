@@ -52,6 +52,7 @@
         <service android:name=".BastardLocationUpdateService" />
 
         <activity android:name=".BastardPathListActivity">
+            android:label="@string/title_activity_bastard_maps_paths_list">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.skoparov.bastardmaps.BastardMainActivity" />

@@ -59,6 +59,8 @@ public class BastardPathPainter
     private Polyline mPath;
     private ColorPicker mPicker = new ColorPicker();
     private HashMap<String, Polyline> mOtherPaths = new HashMap<>();
+    private List< BastardPointsOfInterestStorage.PointOfInterest > mPointsOfInteres = new ArrayList<>();
+    private List< BastardPointsOfInterestStorage.UserMarker > mUserMarkers = new ArrayList<>();
 
     public BastardPathPainter(GoogleMap map, PainterSettings settings)
     {
@@ -68,9 +70,14 @@ public class BastardPathPainter
         mPath = createNewPolyline(false);
     }
 
-    public void addPoint(Location newLocation )
+    public void addPoint(Location newLocation)
     {
         addNewPointsToPath(Arrays.asList(locationToLatLng(newLocation)), mPath);
+    }
+
+    public void addPointOfInterest( BastardPointsOfInterestStorage.PointOfInterest  point )
+    {
+        
     }
 
     public void startNewPath(Location currLoc)

@@ -87,7 +87,7 @@ public class BastardTracker
 
     public void startPath()
     {
-        mP.collector.setLogger(mP.logger);
+        mP.collector.setmLogger(mP.logger);
         if(mIsRecording){
             stopPath();
         }
@@ -123,6 +123,7 @@ public class BastardTracker
     {
         mIsPaused = paused;
         mP.eventsHandler.setBlockEvents(paused);
+        mP.collector.setPaused( paused );
     }
 
     public boolean deletePath( String pathName )

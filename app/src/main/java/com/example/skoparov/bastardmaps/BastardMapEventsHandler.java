@@ -40,6 +40,7 @@ public class BastardMapEventsHandler implements
     public void onLocationChanged(Location location)
     {
         if( !mBlock )
+        //if( false )
         {
             Iterator<BastardMapEventsInterface> it = mInterfaces.iterator();
 
