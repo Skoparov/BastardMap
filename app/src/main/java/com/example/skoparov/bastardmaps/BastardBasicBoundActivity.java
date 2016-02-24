@@ -49,7 +49,7 @@ public class BastardBasicBoundActivity extends AppCompatActivity
     protected void createServiceDependant() {}
 
     @Override
-    public void onDestroy()
+    protected void onDestroy()
     {
         if (mIsBound)
         {

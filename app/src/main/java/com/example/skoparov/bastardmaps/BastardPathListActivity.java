@@ -6,9 +6,12 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 
 public class BastardPathListActivity extends BastardBasicBoundActivity
 {
+    private BastardPathListFragment mFragObject;
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -19,13 +22,24 @@ public class BastardPathListActivity extends BastardBasicBoundActivity
     @Override
     protected void createServiceDependant()
     {
-        BastardPathListFragment fragObject = new BastardPathListFragment();
-        fragObject.setTools(this, mService.getTracker() );
-        fragObject.setData(getPathList());
+        mFragObject = new BastardPathListFragment();
+        mFragObject.setTools(this, mService.getTracker());
+        mFragObject.setData(getPathList());
 
         getSupportFragmentManager().beginTransaction().add(
                 R.id.fragment_container_track_list,
-                fragObject).commit();
+                mFragObject).commit();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState)
+    {
+        if(mFragObject != null)
+        {
+            getSupportFragmentManager().beginTransaction().remove(mFragObject).commit();
+        }
+
+        super.onSaveInstanceState(savedInstanceState);
     }
 
     private ArrayList<BastardPathListFragment.RowItem> getPathList()

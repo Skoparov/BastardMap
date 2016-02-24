@@ -39,8 +39,8 @@ public class BastardPathListFragment extends ListFragment
 
         CustomAdapter(Context context, List<RowItem> rowItem)
         {
-            this.mContext = context;
-            this.mRowItems = rowItem;
+            mContext = context;
+            mRowItems = rowItem;
 
         }
 
