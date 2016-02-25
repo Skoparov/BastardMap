@@ -88,13 +88,16 @@ public class BastardTracker
     public void startPath()
     {
         mP.collector.setmLogger(mP.logger);
-        if(mIsRecording){
+        if(mIsRecording)
+        {
             stopPath();
         }
 
         mP.collector.clear();
         mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Tracker : path started");
         setRecording(true);
+
+        sendToast("Path tracking started");
     }
 
     public void stopPath()
@@ -124,6 +127,15 @@ public class BastardTracker
         mIsPaused = paused;
         mP.eventsHandler.setBlockEvents(paused);
         mP.collector.setPaused(paused);
+
+        if(paused)
+        {
+            sendToast("Path tracking paused");
+        }
+        else
+        {
+            sendToast("Path tracking resumed");
+        }
     }
 
     public boolean deletePath( String pathName )

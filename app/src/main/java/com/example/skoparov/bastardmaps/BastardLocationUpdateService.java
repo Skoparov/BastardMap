@@ -62,11 +62,11 @@ public final class BastardLocationUpdateService extends Service
             showNotification();
             IS_RUNNING = true;
             notifyActivity();
-            Toast.makeText(this, "Location Updating Started", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Location Update Service Started", Toast.LENGTH_SHORT).show();
         }
         else if (action.equals(BastardConstants.ACTION.STOPFOREGROUND_ACTION))
         {
-            Toast.makeText(this, "Location Updating Stopped", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Location Update Service Stopped", Toast.LENGTH_SHORT).show();
             stopForeground(true);
             IS_RUNNING = false;
             notifyActivity();

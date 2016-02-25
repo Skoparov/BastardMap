@@ -14,9 +14,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class BastardMapManager extends SupportMapFragment
              implements
              BastardMapEventsInterface,
@@ -104,6 +101,8 @@ public class BastardMapManager extends SupportMapFragment
         {
             mPainter.addPoint(newLocation);
         }
+
+        printDebugInfo();
 
         //TODO: remove the following debug info
         LatLng userCurrPos = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
@@ -233,7 +232,7 @@ public class BastardMapManager extends SupportMapFragment
         String details = new String();
         details += "Duration: " + String.format("%.2f", p.getDuration()/1000) + " sec\n";
         details += "Distance: " + String.format("%.2f", p.getDistance() ) + " m\n";
-        details += "Avr. spd: " + String.format("%.2f", p.getAverageSpeed() ) + " m/sec\n";
+        details += "Avr. spd: " + String.format("%.2f", p.getAverageSpeed() ) + " m/sec";
 
         mDebugView.setText(details);
     }

@@ -15,8 +15,8 @@ public final class BastardConstants
 
     public interface GUI
     {
-        public static String BUTTON_SERVICE_IS_DORMANT = "Start location updates";
-        public static String BUTTON_SERVICE_IS_RUNNING = "Stop location updates";
+        public static String BUTTON_SERVICE_IS_DORMANT = "Start location service";
+        public static String BUTTON_SERVICE_IS_RUNNING = "Stop location service";
 
         public static String BUTTON_NO_ONGOING_PATH = "Start new path";
         public static String BUTTON_PATH_IS_ONGOING = "Stop path";

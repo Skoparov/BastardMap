@@ -3,14 +3,6 @@
 
     <group android:checkableBehavior="single">
         <item
-            android:id="@+id/log_option"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Log" />
-        <item
-            android:id="@+id/service_option"
-            android:icon="@drawable/ic_menu_gallery"
-            android:title="Start update location" />
-        <item
             android:id="@+id/path_option"
             android:icon="@drawable/ic_menu_gallery"
             android:title="Start new path" />
@@ -20,11 +12,29 @@
             android:title="Pause path" />
     </group>
 
+    <group android:checkableBehavior="single">
+        <item
+            android:id="@+id/service_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Start update location" />
+        <item
+            android:id="@+id/log_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Log" />
+    </group>
+
     <group android:id="@+id/trackListGroup" android:checkableBehavior="single" >
         <item
             android:id="@+id/track_list_option"
             android:icon="@drawable/ic_menu_gallery"
-            android:title="Track list" />
+            android:title="Paths list" />
+    </group>
+
+    <group android:id="@+id/exitGroup" android:checkableBehavior="single" >
+        <item
+            android:id="@+id/exit_option"
+            android:icon="@drawable/ic_menu_gallery"
+            android:title="Exit" />
     </group>
 
 </menu>

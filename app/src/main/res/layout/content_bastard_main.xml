@@ -15,8 +15,8 @@
 
     <TextView
             android:id="@+id/tap_text"
-            android:text="TEST TEXT"
-            android:layout_width="match_parent"
+            android:text="Debug Info"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
 </RelativeLayout>

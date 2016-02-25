@@ -27,6 +27,7 @@ public class BastardMainActivity
 {
     private BastardLogger mLogger;
     private BastardMapManager mMapManager;
+    private boolean mPermissionsGranted;
 
     @Override
     protected void createServiceDependant()
@@ -43,7 +44,8 @@ public class BastardMainActivity
         restoreLogger();
 
         // Create map stuff
-        if( checkLocationAccessPermissions() )
+        mPermissionsGranted = checkLocationAccessPermissions();
+        if( mPermissionsGranted )
         {
             mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
                     "Location permissions granted");
@@ -52,7 +54,6 @@ public class BastardMainActivity
         {
             mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_ERROR,
                     "Location permissions denied");
-            return;
         }
 
         // create map package for service if it's not running
@@ -208,13 +209,22 @@ public class BastardMainActivity
 
             setButtonVisible(newMode, R.id.path_pause_continue_option);
         }
-        else if( id == R.id.path_pause_continue_option)
+        else if(id == R.id.path_pause_continue_option)
         {
             BastardTracker t = mService.getTracker();
             boolean newMode = !t.isPaused();
             t.setPaused(newMode);
 
             updatePathPauseButtonTitle( newMode );
+        }
+        else if(id == R.id.exit_option)
+        {
+            if(BastardLocationUpdateService.IS_RUNNING)
+            {
+                switchServiceState(true);
+                android.os.Process.killProcess(android.os.Process.myPid());
+                System.exit(1);
+            }
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -229,16 +239,20 @@ public class BastardMainActivity
     }
 
     @Override
-    public void onMapReady(GoogleMap googleMap) {
+    public void onMapReady(GoogleMap googleMap)
+    {
         mMapManager.onMapReady(googleMap);
-        setButtonVisible(true, R.id.path_option);
-        setButtonVisible(true, R.id.track_list_option);
 
-        if( mService.getTracker().isRecording() )
+        if( mPermissionsGranted )
         {
-            setButtonVisible(true, R.id.path_pause_continue_option);
+            setButtonVisible(true, R.id.path_option);
+            setButtonVisible(true, R.id.track_list_option);
 
-            updatePathPauseButtonTitle(mService.getTracker().isPaused());
+            if (mService.getTracker().isRecording()) {
+                setButtonVisible(true, R.id.path_pause_continue_option);
+
+                updatePathPauseButtonTitle(mService.getTracker().isPaused());
+            }
         }
     }
 
