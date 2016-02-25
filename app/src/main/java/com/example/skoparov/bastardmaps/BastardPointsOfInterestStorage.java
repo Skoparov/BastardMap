@@ -1,38 +1,25 @@
 package com.example.skoparov.bastardmaps;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class BastardPointsOfInterestStorage
 {
-    public class UserMarker
-    {
-        public LatLng pos;
-        public String descr;
+    private List<BastardUserMarker> mUserMarkers = new ArrayList<>();
+    private List<BastardPointOfInterest> mPointOfInterest = new ArrayList<>();
 
-        public UserMarker(LatLng position, String description)
-        {
-            pos = position;
-            descr = description;
-        }
+    BastardPointsOfInterestStorage(  )
+    {
+
     }
 
-    public class PointOfInterest extends UserMarker
+    public List<BastardPointOfInterest> getPointsOfInterest()
     {
-        PointOfInterest(LatLng position, String description)
-        {
-            super(position, description);
-        }
+        return mPointOfInterest;
     }
 
-    private List<UserMarker> mUserMarkers = new ArrayList<>();
-    private List<PointOfInterest> mPointOfInterest = new ArrayList<>();
-
-    BastardPointsOfInterestStorage( List<PointOfInterest> pointsOfInterest, List<UserMarker> userMarkers )
+    public List<BastardUserMarker> getUserMarkers()
     {
-        mPointOfInterest = pointsOfInterest;
-        mUserMarkers = userMarkers;
+        return mUserMarkers;
     }
 }

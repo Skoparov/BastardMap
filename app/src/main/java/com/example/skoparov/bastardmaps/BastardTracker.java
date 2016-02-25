@@ -123,7 +123,7 @@ public class BastardTracker
     {
         mIsPaused = paused;
         mP.eventsHandler.setBlockEvents(paused);
-        mP.collector.setPaused( paused );
+        mP.collector.setPaused(paused);
     }
 
     public boolean deletePath( String pathName )

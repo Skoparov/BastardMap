@@ -14,6 +14,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BastardMapManager extends SupportMapFragment
              implements
              BastardMapEventsInterface,
@@ -110,8 +113,6 @@ public class BastardMapManager extends SupportMapFragment
     @Override
     public void onMapClick(LatLng latLng)
     {
-
-
         //TODO smth cool
     }
 
@@ -125,7 +126,7 @@ public class BastardMapManager extends SupportMapFragment
         if( mMap != null  )
         {
             mMap.addMarker(new MarkerOptions().position(latLng).title(latLng.toString()));
-            mP.collector.onPositionChanged( targetLocation );
+            mP.collector.onPositionChanged(targetLocation);
         }
 
         //TODO  smth cool
@@ -143,7 +144,7 @@ public class BastardMapManager extends SupportMapFragment
         if(mPainter != null)
         {
             mP.logger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "MapManager : path started");
-            mPainter.startNewPath(getCurrentLocation());
+            mPainter.startNewPath(getCurrentLocation(), null); //TODO : FIN null
         }
     }
 
