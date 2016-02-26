@@ -17,7 +17,6 @@ public class BastardLocationCollector
     public void onPositionChanged( Location newLocation)
     {
         mPath.addPosition(newLocation);
-        printTrack();
     }
 
     public void setPaused( boolean isPaused )
@@ -43,18 +42,5 @@ public class BastardLocationCollector
     public void setmLogger(BastardLogger l)
     {
         mLogger = l;
-    }
-
-    // private methods
-
-    // TODO: Remove the following debug method
-    private void printTrack(  )
-    {
-        if(mLogger != null)
-        {
-            mLogger.addEntry(BastardLogger.EntryType.LOG_ENTRY_INFO,
-                    "Dist = " + mPath.getDistance() + " m \n" +
-                            "Time = " + mPath.getDuration() / 1000 + " sec");
-        }
     }
 }

@@ -106,7 +106,7 @@ public class BastardMapManager extends SupportMapFragment
 
         //TODO: remove the following debug info
         LatLng userCurrPos = new LatLng(newLocation.getLatitude(), newLocation.getLongitude());
-        addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
+        //addLogEntry(BastardLogger.EntryType.LOG_ENTRY_INFO, "Pos: " + userCurrPos);
     }
 
     @Override
